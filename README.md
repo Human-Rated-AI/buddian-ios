@@ -8,6 +8,8 @@ Buddian is a coined name from "buddy" and "guardian": a helpful AI companion who
 
 This repository is the public iOS client home. The first SwiftUI scaffold is not committed yet; this README defines the intended product, security model, and release verification workflow before implementation starts.
 
+The App Store app may be a private host app that imports this repository as a pinned Swift package. This repository should contain the auditable user client core: authentication integration points, encrypted inference, model browsing, wallet balance/history display, proof verification, and the open-source host app. App Store-only live payments, production release automation, and admin-only UI can live in the private host while the security-sensitive client code remains shared.
+
 The production service is available at:
 
 - Web app: https://buddian.com
@@ -50,6 +52,15 @@ Show Buddian balance, transaction history, model spending, refunds, and runtime 
 Explain and verify privacy. Show current attestation/proof state, local key state, source/release verification, proof bundle export, and advanced endpoint settings.
 
 ## Secrets Model
+
+The preferred implementation shape is:
+
+- `BuddianCore`: API models, auth session exchange, account state, ledger decoding, cost math, and feature flags.
+- `BuddianCrypto`: local key handling, request encryption, response decryption, proof parsing, and test vectors.
+- `BuddianUI`: Ask, Models, Library, Wallet, Shield, and reusable native SwiftUI components.
+- `BuddianOpenApp`: the public app target with no live StoreKit purchases and no admin panel.
+
+A private App Store host can import these targets at an exact tag or commit and add StoreKit live top-ups, production entitlements, release automation, and admin-only screens. Backend authorization remains the security boundary for admin access.
 
 This repository may contain public client configuration:
 

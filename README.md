@@ -10,6 +10,8 @@ This repository is the public iOS client home. The first SwiftUI scaffold is not
 
 The App Store app may be a private host app that imports this repository as a pinned Swift package. This repository should contain the auditable user client core: authentication integration points, encrypted inference, model browsing, wallet balance/history display, proof verification, and the open-source host app. App Store-only live payments, production release automation, and admin-only UI can live in the private host while the security-sensitive client code remains shared.
 
+The App Store binary is not the reproducibility target. Users who want maximum assurance should build and install this open-source app themselves with Xcode. The App Store app should disclose which public `buddian-ios` tag or commit it embeds, but platform packaging, signing, and distribution steps mean users should not be asked to compare the App Store binary byte-for-byte against a local build.
+
 The production service is available at:
 
 - Web app: https://buddian.com
@@ -105,10 +107,10 @@ The first working release should document:
 2. Exact source tag.
 3. Dependency lockfiles.
 4. Build command or Xcode archive steps.
-5. Release archive checksum.
-6. How to compare the checked-out source tag with the published release metadata.
+5. Public package checksum.
+6. How to compare the checked-out source tag and lockfiles with the published release metadata.
 
-The goal is that a technical user can build the same client source locally and verify that the published client corresponds to the public code, while server-side secrets remain private.
+The goal is that a technical user can build the open-source client locally and use it for inference with the same Buddian account, while server-side secrets remain private.
 
 ## Implementation Roadmap
 

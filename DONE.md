@@ -25,3 +25,12 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Uses semantic system colors with light/dark theme support
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Components/{CardView,PrimaryButton,SectionHeader,EmptyStateView}.swift`
+
+## Step 4: API Client Shell ✅
+
+- Created `APIClient` singleton with base URL `https://api.buddian.com`
+- Implemented `/health` endpoint with async/await
+- Created models: `APIError` (with localized errors), `HealthResponse`
+- Network layer uses `URLSession` with 30s timeout
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Networking/{APIError,HealthResponse,APIClient}.swift`

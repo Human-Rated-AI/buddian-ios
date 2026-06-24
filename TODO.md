@@ -28,14 +28,14 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: all tabs render with consistent styling~~
 - ~~Commit: design system~~
 
-## Step 4: API Client Shell
+## ~~Step 4: API Client Shell~~ ✅
 
-- Create `APIClient` with base URL `https://api.buddian.com`
-- Implement `/health` endpoint check
-- Create models: `APIError`, `HealthResponse`
-- Add network layer with `URLSession`
-- Verify: health check returns response (or proper error if server unreachable)
-- Commit: API client
+- ~~Create `APIClient` with base URL `https://api.buddian.com`~~
+- ~~Implement `/health` endpoint check~~
+- ~~Create models: `APIError`, `HealthResponse`~~
+- ~~Add network layer with `URLSession`~~
+- ~~Verify: health check returns response (or proper error if server unreachable)~~
+- ~~Commit: API client~~
 
 ## Step 5: Models Tab — Static Catalog
 

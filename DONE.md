@@ -50,3 +50,10 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Generate button disabled when prompt is empty or no model selected
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Views/AskView.swift`
+
+## Step 7: Wallet Tab — Balance & Credits ✅
+
+- Created `WalletView` with balance display, batch credits section, "Add Funds" button
+- Shows recent transactions with placeholder data
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Views/WalletView.swift`

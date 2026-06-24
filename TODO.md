@@ -53,13 +53,13 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: form renders, inputs are interactive, button state changes~~
 - ~~Commit: ask tab~~
 
-## Step 7: Wallet Tab — Balance & Credits
+## ~~Step 7: Wallet Tab — Balance & Credits~~ ✅
 
-- Create `WalletView` with balance display, transaction list (placeholder data)
-- "Add Funds" button (StoreKit integration placeholder)
-- Show batch credit balance
-- Verify: wallet UI renders with placeholder data
-- Commit: wallet tab
+- ~~Create `WalletView` with balance display, transaction list (placeholder data)~~
+- ~~"Add Funds" button (StoreKit integration placeholder)~~
+- ~~Show batch credit balance~~
+- ~~Verify: wallet UI renders with placeholder data~~
+- ~~Commit: wallet tab~~
 
 ## Step 8: Library Tab — History List
 

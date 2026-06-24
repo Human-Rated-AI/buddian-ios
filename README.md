@@ -1,24 +1,20 @@
 # Buddian iOS
 
-Open source iOS client for Buddian, a private AI companion that helps users run confidential AI requests on remote secure GPUs.
+iOS client for Buddian — a private AI companion that generates images and videos on remote GPUs with hardware-encrypted privacy.
 
 Buddian is a coined name from "buddy" and "guardian": a helpful AI companion whose first job is to guard private work.
 
 ## Status
 
-MVP focus: simple image/video generation via vast.ai (non-confidential). Confidential inference via Phala TEE is v2+.
+**MVP (v1)**: Simple image/video generation via vast.ai. No confidential workflow yet. The App Store app is a private host app; this repository contains the auditable user client core.
 
-The App Store app may be a private host app that imports this repository as a pinned Swift package. This repository contains the auditable user client core. App Store-only live payments, production release automation, and admin-only UI live in the private host.
+**v2+**: Confidential inference via Phala TEE, custom model deployment, Hugging Face catalog, proof bundles.
 
-The production service is available at:
+The production service is at https://buddian.com (API: https://api.buddian.com).
 
-- Web app: https://buddian.com
-- API: https://api.buddian.com
-- Public web client: https://github.com/Human-Rated-AI/buddian-web
+## MVP: Simple GPU Generation
 
-## MVP: Simple GPU Generation (v1)
-
-**User flow** (one-way, simple):
+### User Flow
 
 1. Open app → see available models (image/video generation)
 2. Select model → see pricing per image/second
@@ -26,16 +22,16 @@ The production service is available at:
 4. Pay via Apple IAP → credits added
 5. Submit prompts → GPU processes batch
 6. Get notification when ready → view/download results
-7. View past jobs (inc. videos and images generated)
+7. View past jobs (videos and images generated)
 
-**Key design decisions**:
+### Key Design Decisions
 
 - **Async processing**: User submits request, closes app, gets notification when ready, comes back to view results.
-- **GPU lifecycle**: GPU allocated only when batch starts. Idle timeout (30s no user activity) shuts down GPU. User pays only for GPU usage time.
+- **GPU lifecycle**: GPU allocated only when batch starts. Idle timeout (30s no activity) shuts down GPU. User pays only for GPU usage time.
 - **Pricing**: Must cover Apple's 30% commission + payment processing. Target: match or beat vast.ai's listed prices.
 - **Two inference tiers**: "Confidential" (Phala TEE, premium) and "Standard" (vast.ai, cheaper).
 
-**Future features (v2+)**:
+### Future Features (v2+)
 
 - Confidential inference via Phala TEE
 - Custom model deployment
@@ -43,98 +39,154 @@ The production service is available at:
 - Model catalog from Hugging Face
 - Proof bundles and attestation
 
-## Related Repositories
+## Product Shape
 
-| Repo | URL | Purpose |
-| --- | --- | --- |
-| `buddian-ios` | https://github.com/Human-Rated-AI/buddian-ios | iOS app (this repo) |
-| `buddian` (private) | https://github.com/Human-Rated-AI/buddian | Backend API, admin, deployment |
-| `buddian-web` | https://github.com/Human-Rated-AI/buddian-web | Public web client (reference for E2EE crypto) |
-| `buddian-proxy` | https://github.com/Human-Rated-AI/buddian-proxy | Local E2EE proxy for editors |
+The app should feel like a native Apple productivity app: quiet, fast, clear, and confidence-building. Use SwiftUI, semantic system colors, Dynamic Type, VoiceOver labels, system SF Symbols, and first-class light/dark themes.
+
+Two primary workflows:
+
+1. **Real-time inference**: Send a single prompt, get an immediate response.
+2. **Batch generation**: Upload multiple prompts, select a model, pay upfront, process in secure GPU session.
+
+Inference tiers:
+
+- **Confidential (Phala TEE)**: Encrypted prompts, GPU TEE attestation. Premium pricing.
+- **Standard (vast.ai)**: Raw GPU compute, no TEE. Lower pricing.
+
+## Navigation
+
+Bottom `TabView` with five tabs:
+
+1. **Ask** — Run inference with tier selector (Confidential/Standard), model selection, prompt composer, cost preview, encrypted results, proof download.
+2. **Models** — Browse installed models, discover open-source models, deploy to secure GPUs, stop billing, remove deployments.
+3. **Library** — Local-first history: chats, images, audio/video, files. Export via iOS share sheet. Server-side encrypted media remains unusable without local key.
+4. **Wallet** — Balance, transaction history, "Add Funds" (StoreKit), "Buy Batch Credits" (Apple IAP), spending breakdown, batch credit balance.
+5. **Shield** — Privacy verification: attestation/proof state, local key state, source/release verification, proof bundle export, endpoint settings.
+
+Lock indicator in nav bar: green (attestation passed), gray (no session), yellow (proof warning), red (proof failure).
+
+## Batch Generation (Tab 1B)
+
+### GPU Availability
+
+- GPU up (shared session): buy any increment (1hr, 3hr, 6hr).
+- GPU down: must buy 24hr minimum ($39.99).
+
+### Batch Job Lifecycle
+
+1. Queued → prompts encrypted and queued
+2. Provisioning → GPU allocated
+3. Running → inference in encrypted batches, progress X/Y
+4. Completed → results encrypted, decrypted on device only
+5. Idle → GPU stays for remaining purchased time, then shuts down
+
+### Pricing (Apple IAP)
+
+| Product | Price | GPU time | Est. images | Est. video sec |
+| --- | ---: | ---: | ---: | ---: |
+| Starter | $4.99 | ~40 min | ~80 | ~13 |
+| Pro | $9.99 | ~100 min | ~200 | ~34 |
+| Studio | $24.99 | ~280 min | ~560 | ~94 |
+| 1-Hour | $1.99 | ~1 hr | ~200 | ~34 |
+| 3-Hour | $4.99 | ~3 hr | ~600 | ~100 |
+| 6-Hour | $9.99 | ~6 hr | ~1,200 | ~200 |
+| 24-Hour | $39.99 | ~24 hr | ~4,800 | ~800 |
+
+Apple takes 30%. Prices include margin for Apple fees, processing, and GPU costs.
+
+## Two-Tier Inference
+
+| Tier | Provider | Security | Price |
+| --- | --- | --- | --- |
+| Confidential (TEE) | Phala Cloud | GPU TEE, encrypted | Higher |
+| Standard | vast.ai | Raw GPU compute | Lower |
+
+## E2EE Crypto
+
+Same as `buddian-web`: secp256k1 ECDH, HKDF-SHA256 (`ecdsa_encryption`), AES-256-GCM. Key: 64-byte uncompressed public key. Ciphertext: `ephemeralPublicKey || nonce || ciphertext` (hex).
 
 ## Backend API Endpoints
 
 | Endpoint | Method | Auth | Purpose |
 | --- | --- | --- |--- |
-| `/health` | GET | None | API health check |
-| `/web/config` | GET | None | Firebase config, payment links |
-| `/web/auth/firebase` | POST | Firebase ID token | Session exchange |
-| `/web/me` | GET | Session | User profile, balance, transactions |
+| `/health` | GET | None | Health check |
+| `/web/config` | GET | None | Firebase config |
+| `/web/auth/firebase` | POST | Firebase token | Session exchange |
+| `/web/me` | GET | Session | Profile, balance, transactions |
 | `/models` | GET | None | Model catalog (68 models) |
-| `/e2ee/attestation` | POST | Session | Get TEE attestation for model |
+| `/e2ee/attestation` | POST | Session | TEE attestation |
 | `/e2ee/chat/completions` | POST | Session | Encrypted inference |
-| `/e2ee/signature/{id}` | GET | Session | Response signature |
-| `/pricing/chat-quote` | POST | Session | Estimate text token cost |
+| `/pricing/chat-quote` | POST | Session | Cost estimate |
 | `/billing/ledger` | GET | Session | Transaction history |
-| `/admin/overview` | GET | Admin | Provider balances, users |
-| `/installable-models` | GET | Session | Installable model sources |
-| `/custom-models/jobs` | GET/POST | Session | Custom model job queue |
-
-## Two-Tier Inference
-
-Users choose between two tiers:
-
-| Tier | Provider | Security | Price |
-| --- | --- | --- | --- |
-| Confidential (TEE) | Phala Cloud | GPU TEE, encrypted inference | Higher |
-| Standard | vast.ai | Raw GPU compute | Lower |
-
-Backend routes requests to the appropriate provider based on tier selection.
-
-## E2EE Crypto (for iOS port)
-
-The iOS app should use the same crypto as `buddian-web`:
-
-- **Key exchange**: secp256k1 ECDH
-- **Key derivation**: HKDF-SHA256 with `ecdsa_encryption` info
-- **Encryption**: AES-256-GCM
-- **Key format**: 64-byte uncompressed public key (no 04 prefix)
-- **Ciphertext format**: `ephemeralPublicKey || nonce || ciphertext` (hex)
-
-Reference: `buddian-web/src/crypto.js` lines 379-653
+| `/installable-models` | GET | Session | Installable sources |
+| `/custom-models/jobs` | GET/POST | Session | Job queue |
 
 ## Key Files to Reference (in `buddian` repo)
 
-| File | Path | What it contains |
+| File | Lines | Contents |
 | --- | --- | --- |
-| E2EE crypto | `web/app.js` lines 379-653 | secp256k1, HKDF, AES-GCM, attestation verification |
-| Model catalog | `api/main.py` line 5608+ | `/models` endpoint, pricing, filtering |
-| Billing | `api/main.py` line 4936+ | `chat_cost_from_model`, reconciliation |
-| Proof bundles | `web/app.js` line 2614+ | `buddian.e2ee-proof-bundle.v1` format |
-| Auth flow | `web/app.js` line 1755+ | Firebase session exchange |
+| E2EE crypto | `web/app.js` 379-653 | secp256k1, HKDF, AES-GCM, attestation |
+| Model catalog | `api/main.py` 5608+ | `/models`, pricing, filtering |
+| Billing | `api/main.py` 4936+ | Cost calculation, reconciliation |
+| Proof bundles | `web/app.js` 2614+ | `buddian.e2ee-proof-bundle.v1` |
+| Auth flow | `web/app.js` 1755+ | Firebase session exchange |
+| Batch jobs | `api/main.py` 2578+ | `custom_model_jobs` queue pattern |
 
-## iOS-Specific Notes
+## Repositories
 
-- Use the same E2EE crypto as `buddian-web` (secp256k1 ECDH + HKDF-SHA256 + AES-GCM)
-- Call the same API endpoints as the web client
-- Firebase config is public and can be embedded in the iOS app
-- Provider API keys never ship to the iOS app
-- Verify attestation the same way as the web client
+| Repo | URL | Purpose |
+| --- | --- | --- |
+| `buddian-ios` | https://github.com/Human-Rated-AI/buddian-ios | iOS app (this repo) |
+| `buddian` | https://github.com/Human-Rated-AI/buddian | Backend API (private) |
+| `buddian-web` | https://github.com/Human-Rated-AI/buddian-web | Web client (E2EE reference) |
+| `buddian-proxy` | https://github.com/Human-Rated-AI/buddian-proxy | Local E2EE proxy |
 
 ## Secrets Model
 
-This repository may contain:
+May contain: Firebase iOS config, Google Sign-In IDs, Apple Sign In metadata, API defaults (`https://api.buddian.com`), StoreKit product IDs.
 
-- Firebase iOS app identifiers
-- Google Sign-In client IDs and URL schemes
-- Apple Sign in capability metadata
-- Public API defaults (`https://api.buddian.com`)
-- StoreKit product identifiers
+Must NOT contain: API signing secrets, Firebase service account, Apple private keys, provider API keys, payment webhook secrets, database credentials.
 
-This repository must not contain:
+## Backend Work Required
 
-- Buddian API signing secrets
-- Firebase service account JSON
-- Apple private keys or App Store Connect API private keys
-- Provider API keys
-- Payment webhook secrets
-- Database credentials
+- iOS session exchange endpoint
+- StoreKit transaction verification
+- Batch generation queue endpoint
+- GPU-time credit purchase endpoint
+- Batch result download (individual or ZIP)
+- Apple IAP receipt verification
+
+## Design Guardrails
+
+- One primary action per screen
+- Cost shown before every billable action
+- Balance and proof state visible near billable actions
+- Clear empty states with single next step
+- No admin UI in public app
+- No provider pricing/balance in user screens
+- Native sheets for model selection, top-up, proof, export
+
+## Implementation Milestones
+
+1. SwiftUI scaffold + Xcode build verification
+2. API client (health, config, models, account, ledger, auth)
+3. Firebase Auth (Apple + Google)
+4. E2EE client port from `buddian-web` to Swift
+5. Ask tab: model selection, quote, encrypted inference, proof download
+6. Batch tab: prompt upload, GPU-time purchase, progress, results
+7. Wallet tab: balance, ledger, batch credits, StoreKit shell
+8. StoreKit transaction verification endpoint
+9. Models tab: catalog, install, deploy, shutdown
+10. Library tab: local history, encrypted media
+11. Shield tab: proof verification, source checks
+12. Unit tests for API, crypto, proof validation
+13. TestFlight/App Store configuration
 
 ## Build And Verification
 
 1. Required Xcode and iOS versions
 2. Exact source tag
 3. Dependency lockfiles
-4. Build command or Xcode archive steps
+4. Build command
 5. Public package checksum
-6. Compare checked-out source tag and lockfiles with published release metadata
+6. Compare source tag and lockfiles with release metadata

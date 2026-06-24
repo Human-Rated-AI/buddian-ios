@@ -27,23 +27,21 @@ struct ModelsView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if modelCache.models.isEmpty {
-                    if modelCache.isLoading {
-                        Spacer()
-                        ProgressView("Loading models...")
-                        Spacer()
-                    } else {
-                        Spacer()
-                        EmptyStateView(
-                            icon: "cpu",
-                            title: "No Models Available",
-                            message: "Check back later for available models."
-                        )
-                        Spacer()
-                    }
+                filterBar
+                Divider()
+                if modelCache.models.isEmpty && modelCache.isLoading {
+                    Spacer()
+                    ProgressView("Loading models...")
+                    Spacer()
+                } else if modelCache.models.isEmpty {
+                    Spacer()
+                    EmptyStateView(
+                        icon: "cpu",
+                        title: "No Models Available",
+                        message: "Check back later for available models."
+                    )
+                    Spacer()
                 } else {
-                    filterBar
-                    Divider()
                     modelList
                 }
             }
@@ -80,7 +78,6 @@ struct ModelsView: View {
             .padding(.horizontal)
             .padding(.vertical, 8)
         }
-        .frame(maxWidth: .infinity)
         .background(Color(.systemBackground))
     }
 

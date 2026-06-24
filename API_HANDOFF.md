@@ -4,9 +4,46 @@ Requirements for backend API changes to support iOS app MVP.
 
 ---
 
-## 1. Custom Model Installation Endpoint
+## API Status (Verified 2026-06-24)
 
-**Purpose:** Allow users to install image/video generation models on rented GPUs.
+| Endpoint | Method | Status | Notes |
+|----------|--------|--------|-------|
+| `/models` | GET | ✅ Working | 67 models, text-only output |
+| `/generations` | POST | ✅ Implemented | Requires auth (401 without session) |
+| `/generations/{id}` | GET | ✅ Implemented | Requires auth |
+| `/web/me` | GET | ✅ Implemented | Requires auth |
+| `/web/auth/firebase` | POST | ✅ Implemented | Session exchange |
+| `/installable-models` | GET | ✅ Implemented | Requires auth |
+| `/health` | GET | ✅ Working | No auth required |
+
+---
+
+## 1. Model Catalog — Image/Video Models Needed
+
+**Current state:** `/models` returns 67 models, all with `output_modalities: ["text"]`.
+
+**Required:** Add image/video generation models with:
+```json
+{
+  "id": "stabilityai/stable-diffusion-xl",
+  "name": "Stable Diffusion XL",
+  "type": "image_generation",
+  "output_modalities": ["image"],
+  "pricing": {
+    "per_image": 0.025
+  },
+  "installed": false,
+  "install_time_seconds": 120
+}
+```
+
+**Filter fields needed:**
+- `output_modalities`: `["text"]`, `["image"]`, `["video"]`
+- `type`: `"chat"`, `"image_generation"`, `"video_generation"`
+
+---
+
+## 2. Custom Model Installation
 
 **Endpoint:** `POST /installable-models/install`
 
@@ -28,17 +65,9 @@ Requirements for backend API changes to support iOS app MVP.
 }
 ```
 
-**Requirements:**
-- Must support model catalog from Hugging Face
-- Must handle GPU lifecycle (start, install, run, shutdown)
-- Must integrate with vast.ai for GPU rental
-- Must support both standard and confidential (TEE) tiers
-
 ---
 
-## 2. Image/Video Generation Endpoint
-
-**Purpose:** Submit prompts for image/video generation on installed models.
+## 3. Image/Video Generation
 
 **Endpoint:** `POST /generations`
 
@@ -67,9 +96,7 @@ Requirements for backend API changes to support iOS app MVP.
 
 ---
 
-## 3. Generation Status Endpoint
-
-**Purpose:** Check status of a generation job.
+## 4. Generation Status
 
 **Endpoint:** `GET /generations/{job_id}`
 
@@ -86,36 +113,7 @@ Requirements for backend API changes to support iOS app MVP.
 
 ---
 
-## 4. Model Catalog with Image/Video Models
-
-**Purpose:** Return available models including image/video generation models.
-
-**Current state:** `/models` returns 68 text-only models.
-
-**Required additions:**
-```json
-{
-  "id": "stabilityai/stable-diffusion-xl",
-  "name": "Stable Diffusion XL",
-  "type": "image_generation",
-  "output_modalities": ["image"],
-  "pricing": {
-    "per_image": 0.025
-  },
-  "installed": false,
-  "install_time_seconds": 120
-}
-```
-
-**Filter fields needed:**
-- `output_modalities`: `["text"]`, `["image"]`, `["video"]`
-- `type`: `"chat"`, `"image_generation"`, `"video_generation"`
-
----
-
 ## 5. User Balance & Credits
-
-**Purpose:** Fetch user balance, GPU credits, and transaction history.
 
 **Endpoint:** `GET /web/me`
 
@@ -144,8 +142,6 @@ Requirements for backend API changes to support iOS app MVP.
 
 ## 6. Session Authentication
 
-**Purpose:** Exchange Firebase token for session token.
-
 **Endpoint:** `POST /web/auth/firebase`
 
 **Request:**
@@ -166,13 +162,9 @@ Requirements for backend API changes to support iOS app MVP.
 
 ---
 
-## Summary
+## Next Steps for Backend
 
-| Priority | Endpoint | Status |
-|----------|----------|--------|
-| P0 | `/models` — add image/video models | Needed |
-| P0 | `/generations` — submit prompts | Needed |
-| P0 | `/generations/{id}` — check status | Needed |
-| P1 | `/web/me` — user balance | Needed |
-| P1 | `/web/auth/firebase` — session auth | Needed |
-| P2 | `/installable-models/install` — model installation | Future |
+1. **Add image/video generation models** to `/models` endpoint
+2. **Verify `/generations` endpoint** accepts the request format above
+3. **Verify `/generations/{id}` endpoint** returns status and result URL
+4. **Verify `/web/me` endpoint** returns balance and transactions

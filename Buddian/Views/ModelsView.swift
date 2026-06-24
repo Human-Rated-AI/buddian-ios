@@ -1,9 +1,7 @@
 import SwiftUI
 
 struct ModelsView: View {
-    @State private var remoteModels: [RemoteModel] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @EnvironmentObject private var modelCache: ModelCache
     @State private var selectedFilter: ModelFilter = .all
 
     enum ModelFilter: String, CaseIterable {
@@ -16,38 +14,22 @@ struct ModelsView: View {
     private var filteredModels: [RemoteModel] {
         switch selectedFilter {
         case .all:
-            return remoteModels
+            return modelCache.models
         case .text:
-            return remoteModels.filter { $0.outputModalities.contains("text") }
+            return modelCache.models.filter { $0.outputModalities.contains("text") }
         case .image:
-            return remoteModels.filter { $0.outputModalities.contains("image") }
+            return modelCache.models.filter { $0.outputModalities.contains("image") }
         case .video:
-            return remoteModels.filter { $0.outputModalities.contains("video") }
+            return modelCache.models.filter { $0.outputModalities.contains("video") }
         }
     }
 
     var body: some View {
         NavigationStack {
             Group {
-                if isLoading {
+                if modelCache.isLoading && modelCache.models.isEmpty {
                     ProgressView("Loading models...")
-                } else if let error = errorMessage {
-                    VStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.largeTitle)
-                            .foregroundStyle(.orange)
-                        Text("Failed to load models")
-                            .font(.headline)
-                        Text(error)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                        Button("Retry") {
-                            Task { await loadModels() }
-                        }
-                    }
-                    .padding()
-                } else if remoteModels.isEmpty {
+                } else if modelCache.models.isEmpty {
                     EmptyStateView(
                         icon: "cpu",
                         title: "No Models Available",
@@ -62,10 +44,7 @@ struct ModelsView: View {
             }
             .navigationTitle("Models")
             .refreshable {
-                await loadModels()
-            }
-            .task {
-                await loadModels()
+                await modelCache.refresh()
             }
         }
     }
@@ -97,17 +76,6 @@ struct ModelsView: View {
         List(filteredModels) { model in
             RemoteModelRow(model: model)
         }
-    }
-
-    private func loadModels() async {
-        isLoading = remoteModels.isEmpty
-        errorMessage = nil
-        do {
-            remoteModels = try await APIClient.shared.fetchModels()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-        isLoading = false
     }
 }
 
@@ -165,4 +133,5 @@ private struct RemoteModelRow: View {
 
 #Preview {
     ModelsView()
+        .environmentObject(ModelCache.shared)
 }

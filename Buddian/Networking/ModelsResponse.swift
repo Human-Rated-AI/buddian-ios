@@ -49,15 +49,15 @@ struct UserPricing: Codable {
         if let perImage {
             return "$\(formatPrice(perImage))/image"
         } else if let perSecond {
-            return "$\(formatPrice(perSecond))/sec"
+            return "$\(formatPrice(perSecond, decimals: 3))/s"
         } else if let input = promptPer1mTokens, let output = completionPer1mTokens {
             return "In: $\(formatPrice(input)) · Out: $\(formatPrice(output))/1M"
         }
         return nil
     }
 
-    private func formatPrice(_ s: String) -> String {
+    private func formatPrice(_ s: String, decimals: Int = 2) -> String {
         guard let v = Double(s) else { return s }
-        return String(format: "%.2f", v)
+        return String(format: "%.\(decimals)f", v)
     }
 }

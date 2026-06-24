@@ -27,18 +27,20 @@ struct ModelsView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if modelCache.isLoading && modelCache.models.isEmpty {
-                    Spacer()
-                    ProgressView("Loading models...")
-                    Spacer()
-                } else if modelCache.models.isEmpty {
-                    Spacer()
-                    EmptyStateView(
-                        icon: "cpu",
-                        title: "No Models Available",
-                        message: "Check back later for available models."
-                    )
-                    Spacer()
+                if modelCache.models.isEmpty {
+                    if modelCache.isLoading {
+                        Spacer()
+                        ProgressView("Loading models...")
+                        Spacer()
+                    } else {
+                        Spacer()
+                        EmptyStateView(
+                            icon: "cpu",
+                            title: "No Models Available",
+                            message: "Check back later for available models."
+                        )
+                        Spacer()
+                    }
                 } else {
                     filterBar
                     Divider()
@@ -46,6 +48,11 @@ struct ModelsView: View {
                 }
             }
             .navigationTitle("Models")
+            .onAppear {
+                if modelCache.models.isEmpty {
+                    Task { await modelCache.refresh() }
+                }
+            }
             .refreshable {
                 await modelCache.refresh()
             }

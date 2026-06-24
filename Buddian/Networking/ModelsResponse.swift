@@ -32,12 +32,32 @@ struct RemoteModel: Codable, Identifiable {
 
 struct UserPricing: Codable {
     let currency: String
-    let promptPer1mTokens: String
-    let completionPer1mTokens: String
+    let promptPer1mTokens: String?
+    let completionPer1mTokens: String?
+    let perImage: String?
+    let perSecond: String?
 
     enum CodingKeys: String, CodingKey {
         case currency
         case promptPer1mTokens = "prompt_per_1m_tokens"
         case completionPer1mTokens = "completion_per_1m_tokens"
+        case perImage = "per_image"
+        case perSecond = "per_second"
+    }
+
+    var displayPrice: String? {
+        if let perImage {
+            return "$\(formatPrice(perImage))/image"
+        } else if let perSecond {
+            return "$\(formatPrice(perSecond))/sec"
+        } else if let input = promptPer1mTokens, let output = completionPer1mTokens {
+            return "In: $\(formatPrice(input)) · Out: $\(formatPrice(output))/1M"
+        }
+        return nil
+    }
+
+    private func formatPrice(_ s: String) -> String {
+        guard let v = Double(s) else { return s }
+        return String(format: "%.2f", v)
     }
 }

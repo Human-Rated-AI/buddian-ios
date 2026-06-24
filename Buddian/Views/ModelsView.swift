@@ -26,7 +26,7 @@ struct ModelsView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            VStack(spacing: 0) {
                 if modelCache.isLoading && modelCache.models.isEmpty {
                     ProgressView("Loading models...")
                 } else if modelCache.models.isEmpty {
@@ -36,10 +36,8 @@ struct ModelsView: View {
                         message: "Check back later for available models."
                     )
                 } else {
-                    VStack(spacing: 0) {
-                        filterBar
-                        modelList
-                    }
+                    filterBar
+                    modelList
                 }
             }
             .navigationTitle("Models")
@@ -103,13 +101,10 @@ private struct RemoteModelRow: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-            if let pricing = model.userPricing {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Input: $\(formatPrice(pricing.promptPer1mTokens))/1M tokens")
-                    Text("Output: $\(formatPrice(pricing.completionPer1mTokens))/1M tokens")
-                }
-                .font(.caption)
-                .foregroundStyle(.primary)
+            if let price = model.userPricing?.displayPrice {
+                Text(price)
+                    .font(.caption)
+                    .foregroundStyle(.primary)
             }
             HStack {
                 ForEach(model.outputModalities, id: \.self) { mod in
@@ -123,11 +118,6 @@ private struct RemoteModelRow: View {
             }
         }
         .padding(.vertical, 4)
-    }
-
-    private func formatPrice(_ priceString: String) -> String {
-        guard let price = Double(priceString) else { return priceString }
-        return String(format: "%.2f", price)
     }
 }
 

@@ -36,7 +36,6 @@ struct AskView: View {
                         Text("Estimated Cost")
                         Spacer()
                         Text(String(format: "$%.3f", estimatedCost))
-                            .foregroundStyle(.green)
                             .fontWeight(.medium)
                     }
                 }
@@ -70,6 +69,7 @@ struct AskView: View {
                 }
             }
         }
+        .buttonStyle(.plain)
     }
 }
 

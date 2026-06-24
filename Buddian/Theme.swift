@@ -1,20 +1,16 @@
 import SwiftUI
 
 enum AppTheme {
-    static let brandBlue = Color(red: 0.1, green: 0.21, blue: 0.36)
-
     static func badgeBackground(for type: ModelType) -> Color {
         switch type {
         case .image: return .blue
-        case .video: return .purple
+        case .video: return .teal
         }
     }
 
     static func badgeForeground(for type: ModelType) -> Color {
         .white
     }
-
-    static let priceForeground = Color.green
 }
 
 struct KeyboardDismissal: ViewModifier {

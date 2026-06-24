@@ -5,7 +5,7 @@ struct WalletView: View {
         NavigationStack {
             List {
                 Section {
-                    HStack {
+                    HStack(alignment: .center) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Balance")
                                 .font(.subheadline)
@@ -17,7 +17,7 @@ struct WalletView: View {
                         Spacer()
                         Button(action: {}) {
                             Image(systemName: "plus.circle.fill")
-                                .font(.title2)
+                                .font(.largeTitle)
                                 .foregroundStyle(.green)
                         }
                     }
@@ -84,7 +84,7 @@ private struct TransactionRow: View {
             }
             Spacer()
             Text(String(format: "$%.2f", abs(transaction.amount)))
-                .foregroundStyle(transaction.amount < 0 ? .red : .green)
+                .fontWeight(.medium)
         }
     }
 }

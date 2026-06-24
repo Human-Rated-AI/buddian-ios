@@ -49,6 +49,9 @@ struct WalletView: View {
                 }
             }
             .navigationTitle("Wallet")
+            .refreshable {
+                // TODO: Fetch balance from API
+            }
         }
     }
 

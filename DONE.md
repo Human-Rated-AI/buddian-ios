@@ -81,3 +81,11 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Note: Using P256 (NIST) instead of secp256k1 — Apple's CryptoKit doesn't support secp256k1 natively. Can swap to CryptoKit's Secp256k1 if available, or use a third-party library for full secp256k1 compatibility.
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Crypto/CryptoManager.swift`
+
+## Step 11: Navigation Polish & Empty States ✅
+
+- Added lock indicator in Shield tab nav bar (shows attestation status icon)
+- Added pull-to-refresh placeholders on Models, Library, and Wallet tabs
+- Library tab already had empty state from Step 8
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Views/{ShieldView,ModelsView,LibraryView,WalletView}.swift`

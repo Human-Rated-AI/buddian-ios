@@ -21,6 +21,9 @@ struct LibraryView: View {
                 }
             }
             .navigationTitle("Library")
+            .refreshable {
+                // TODO: Fetch generations from API
+            }
         }
     }
 }

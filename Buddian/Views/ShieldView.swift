@@ -64,6 +64,12 @@ struct ShieldView: View {
                 }
             }
             .navigationTitle("Shield")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Image(systemName: attestationStatus.icon)
+                        .foregroundStyle(attestationStatus.color)
+                }
+            }
         }
     }
 }

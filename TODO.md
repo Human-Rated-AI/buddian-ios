@@ -86,13 +86,13 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: unit tests pass for key gen, encrypt, decrypt roundtrip~~
 - ~~Commit: crypto foundation~~
 
-## Step 11: Navigation Polish & Empty States
+## ~~Step 11: Navigation Polish & Empty States~~ ✅
 
-- Add nav bar titles, lock indicator
-- Implement empty states for all tabs
-- Add pull-to-refresh placeholders
-- Verify: all tabs have proper nav bars and empty states
-- Commit: navigation polish
+- ~~Add nav bar titles, lock indicator~~
+- ~~Implement empty states for all tabs~~
+- ~~Add pull-to-refresh placeholders~~
+- ~~Verify: all tabs have proper nav bars and empty states~~
+- ~~Commit: navigation polish~~
 
 ## Step 12: Final Build & Smoke Test
 

@@ -17,6 +17,9 @@ struct ModelsView: View {
                 }
             }
             .navigationTitle("Models")
+            .refreshable {
+                // TODO: Fetch models from API
+            }
         }
     }
 }

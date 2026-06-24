@@ -5,23 +5,31 @@ struct WalletView: View {
         NavigationStack {
             List {
                 Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Balance")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        Text("$12.50")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Balance")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Text("$12.50")
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                        }
+                        Spacer()
+                        Button(action: {}) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.green)
+                        }
                     }
                     .padding(.vertical, 8)
                 }
 
-                Section("Batch Credits") {
+                Section("GPU Credits") {
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("GPU Time")
+                            Text("Time Remaining")
                                 .font(.headline)
-                            Text("40 minutes remaining")
+                            Text("40 minutes")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
@@ -30,16 +38,6 @@ struct WalletView: View {
                             .font(.title3)
                             .fontWeight(.medium)
                             .foregroundStyle(.primary)
-                    }
-                }
-
-                Section("Add Funds") {
-                    Button(action: {}) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundStyle(.green)
-                            Text("Add Funds via Apple Pay")
-                        }
                     }
                 }
 

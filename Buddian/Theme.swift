@@ -1,28 +1,38 @@
 import SwiftUI
 
 enum AppTheme {
-    static let accentBlue = Color("AccentBlue", bundle: nil)
-    static let successGreen = Color("SuccessGreen", bundle: nil)
-
-    static let imageBadgeBackground = Color.blue
-    static let imageBadgeForeground = Color.white
-
-    static let videoBadgeBackground = Color.purple
-    static let videoBadgeForeground = Color.white
-
-    static let priceForeground = Color.green
+    static let brandBlue = Color(red: 0.1, green: 0.21, blue: 0.36)
 
     static func badgeBackground(for type: ModelType) -> Color {
         switch type {
-        case .image: return imageBadgeBackground
-        case .video: return videoBadgeBackground
+        case .image: return .blue
+        case .video: return .purple
         }
     }
 
     static func badgeForeground(for type: ModelType) -> Color {
-        switch type {
-        case .image: return imageBadgeForeground
-        case .video: return videoBadgeForeground
-        }
+        .white
+    }
+
+    static let priceForeground = Color.green
+}
+
+struct KeyboardDismissal: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .onTapGesture {
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder),
+                    to: nil,
+                    from: nil,
+                    for: nil
+                )
+            }
+    }
+}
+
+extension View {
+    func dismissKeyboardOnTap() -> some View {
+        modifier(KeyboardDismissal())
     }
 }

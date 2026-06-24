@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AskView: View {
     @State private var prompt = ""
-    @State private var selectedModel: AIModel? = AIModel.sampleModels.first
+    @State private var selectedModel: AIModel?
 
     private var estimatedCost: Double {
         guard let model = selectedModel else { return 0 }
@@ -16,45 +16,28 @@ struct AskView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Model") {
-                    ForEach(AIModel.sampleModels) { model in
-                        Button {
-                            selectedModel = model
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(model.name)
-                                        .foregroundStyle(.primary)
-                                    Text(model.type.rawValue)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                if selectedModel?.id == model.id {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(AppTheme.badgeBackground(for: model.type))
-                                }
-                            }
-                        }
+                Section {
+                    ForEach(AIModel.allModels) { model in
+                        modelRow(model)
                     }
+                } header: {
+                    Text("Model")
                 }
 
-                Section("Prompt") {
+                Section {
                     TextEditor(text: $prompt)
                         .frame(minHeight: 100)
+                } header: {
+                    Text("Prompt")
                 }
 
                 Section {
                     HStack {
                         Text("Estimated Cost")
                         Spacer()
-                        HStack(spacing: 4) {
-                            Image(systemName: "dollarsign.circle.fill")
-                                .foregroundStyle(AppTheme.priceForeground)
-                            Text(String(format: "$%.3f", estimatedCost))
-                                .foregroundStyle(AppTheme.priceForeground)
-                        }
-                        .fontWeight(.medium)
+                        Text(String(format: "$%.3f", estimatedCost))
+                            .foregroundStyle(.green)
+                            .fontWeight(.medium)
                     }
                 }
 
@@ -63,6 +46,29 @@ struct AskView: View {
                 }
             }
             .navigationTitle("Ask")
+            .dismissKeyboardOnTap()
+        }
+    }
+
+    @ViewBuilder
+    private func modelRow(_ model: AIModel) -> some View {
+        Button {
+            selectedModel = model
+        } label: {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(model.name)
+                        .foregroundStyle(.primary)
+                    Text(model.type.rawValue)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if selectedModel?.id == model.id {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.accentColor)
+                }
+            }
         }
     }
 }

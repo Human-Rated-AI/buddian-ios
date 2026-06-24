@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ModelsView: View {
-    let models = AIModel.sampleModels
+    let models = AIModel.allModels
 
     var body: some View {
         NavigationStack {
@@ -29,7 +29,7 @@ private struct ModelRow: View {
                 Spacer()
                 Text(model.type.rawValue)
                     .font(.caption)
-                    .fontWeight(.medium)
+                    .fontWeight(.semibold)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(AppTheme.badgeBackground(for: model.type))
@@ -39,13 +39,10 @@ private struct ModelRow: View {
             Text(model.description)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            HStack {
-                Image(systemName: "dollarsign.circle.fill")
-                    .foregroundStyle(AppTheme.priceForeground)
-                Text(String(format: "$%.3f %@", model.pricePerUnit, model.unitLabel))
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-            }
+            Text(String(format: "$%.3f %@", model.pricePerUnit, model.unitLabel))
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+                .fontWeight(.medium)
         }
         .padding(.vertical, 4)
     }

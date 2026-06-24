@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512">
+      <stop offset="0%" stop-color="#1a365d"/>
+      <stop offset="100%" stop-color="#2b6cb0"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="256" y1="80" x2="256" y2="432">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#e2e8f0" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
+  <!-- Shield shape -->
+  <path d="M256 80 L380 140 L380 280 C380 360 320 420 256 432 C192 420 132 360 132 280 L132 140 Z" 
+        fill="url(#shield)" stroke="none"/>
+  <!-- Inner shield line -->
+  <path d="M256 110 L356 162 L356 276 C356 344 304 396 256 406 C208 396 156 344 156 276 L156 162 Z" 
+        fill="none" stroke="#1a365d" stroke-width="3" stroke-opacity="0.2"/>
+  <!-- Buddy face - simple friendly circle -->
+  <circle cx="224" cy="230" r="16" fill="#1a365d" fill-opacity="0.8"/>
+  <circle cx="288" cy="230" r="16" fill="#1a365d" fill-opacity="0.8"/>
+  <!-- Smile -->
+  <path d="M200 270 Q256 320 312 270" fill="none" stroke="#1a365d" stroke-width="6" stroke-linecap="round" stroke-opacity="0.8"/>
+</svg>

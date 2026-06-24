@@ -69,13 +69,13 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: library renders, empty state shows correctly~~
 - ~~Commit: library tab~~
 
-## Step 9: Shield Tab — Privacy Status
+## ~~Step 9: Shield Tab — Privacy Status~~ ✅
 
-- Create `ShieldView` with attestation status, key state, endpoint settings
-- Lock indicator in nav bar (green/gray/yellow/red)
-- Source verification display
-- Verify: shield tab renders with status indicators
-- Commit: shield tab
+- ~~Create `ShieldView` with attestation status, key state, endpoint settings~~
+- ~~Lock indicator in nav bar (green/gray/yellow/red)~~
+- ~~Source verification display~~
+- ~~Verify: shield tab renders with status indicators~~
+- ~~Commit: shield tab~~
 
 ## Step 10: E2EE Crypto Foundation
 

@@ -65,3 +65,10 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Status indicator with color coding (completed/processing/failed)
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Views/LibraryView.swift`
+
+## Step 9: Shield Tab — Privacy Status ✅
+
+- Created `ShieldView` with attestation status, local key state, source verification, endpoint settings
+- Status indicators with color-coded icons (green/yellow/red/gray)
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Views/ShieldView.swift`

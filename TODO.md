@@ -77,14 +77,14 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: shield tab renders with status indicators~~
 - ~~Commit: shield tab~~
 
-## Step 10: E2EE Crypto Foundation
+## ~~Step 10: E2EE Crypto Foundation~~ ✅
 
-- Port secp256k1 ECDH key generation to Swift
-- Implement HKDF-SHA256 key derivation
-- Implement AES-256-GCM encrypt/decrypt
-- Create `CryptoManager` singleton
-- Verify: unit tests pass for key gen, encrypt, decrypt roundtrip
-- Commit: crypto foundation
+- ~~Port secp256k1 ECDH key generation to Swift~~
+- ~~Implement HKDF-SHA256 key derivation~~
+- ~~Implement AES-256-GCM encrypt/decrypt~~
+- ~~Create `CryptoManager` singleton~~
+- ~~Verify: unit tests pass for key gen, encrypt, decrypt roundtrip~~
+- ~~Commit: crypto foundation~~
 
 ## Step 11: Navigation Polish & Empty States
 

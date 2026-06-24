@@ -72,3 +72,12 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Status indicators with color-coded icons (green/yellow/red/gray)
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Views/ShieldView.swift`
+
+## Step 10: E2EE Crypto Foundation ✅
+
+- Created `CryptoManager` singleton with P256 key generation
+- Implemented encrypt/decrypt using CryptoKit (P256 ECDH + HKDF-SHA256 + AES-GCM)
+- Added hex encoding/decoding helpers for Data
+- Note: Using P256 (NIST) instead of secp256k1 — Apple's CryptoKit doesn't support secp256k1 natively. Can swap to CryptoKit's Secp256k1 if available, or use a third-party library for full secp256k1 compatibility.
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Crypto/CryptoManager.swift`

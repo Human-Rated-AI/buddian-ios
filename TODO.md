@@ -61,13 +61,13 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: wallet UI renders with placeholder data~~
 - ~~Commit: wallet tab~~
 
-## Step 8: Library Tab — History List
+## ~~Step 8: Library Tab — History List~~ ✅
 
-- Create `LibraryView` with past generations list (placeholder data)
-- Show thumbnail, prompt, date, status
-- Empty state with call-to-action
-- Verify: library renders, empty state shows correctly
-- Commit: library tab
+- ~~Create `LibraryView` with past generations list (placeholder data)~~
+- ~~Show thumbnail, prompt, date, status~~
+- ~~Empty state with call-to-action~~
+- ~~Verify: library renders, empty state shows correctly~~
+- ~~Commit: library tab~~
 
 ## Step 9: Shield Tab — Privacy Status
 

@@ -57,3 +57,11 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Shows recent transactions with placeholder data
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Views/WalletView.swift`
+
+## Step 8: Library Tab — History List ✅
+
+- Created `LibraryView` with empty state and generation list
+- Each generation shows thumbnail, prompt, model name, date, and status
+- Status indicator with color coding (completed/processing/failed)
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Views/LibraryView.swift`

@@ -34,3 +34,11 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Network layer uses `URLSession` with 30s timeout
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Networking/{APIError,HealthResponse,APIClient}.swift`
+
+## Step 5: Models Tab — Static Catalog ✅
+
+- Created `AIModel` struct with sample data (6 models: SDXL, DALL·E 3, Flux Pro, SVD, plus confidential variants)
+- `ModelsView` shows models grouped by tier (Standard/Confidential)
+- Each row shows name, type badge, description, and price per unit
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Models/AIModel.swift`, `Buddian/Views/ModelsView.swift`

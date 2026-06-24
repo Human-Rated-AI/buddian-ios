@@ -37,13 +37,13 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: health check returns response (or proper error if server unreachable)~~
 - ~~Commit: API client~~
 
-## Step 5: Models Tab — Static Catalog
+## ~~Step 5: Models Tab — Static Catalog~~ ✅
 
-- Create `ModelsView` with list of available models
-- Hardcode sample model data matching README pricing tiers
-- Show model name, type (image/video), pricing per unit
-- Verify: models list renders with correct data
-- Commit: models tab
+- ~~Create `ModelsView` with list of available models~~
+- ~~Hardcode sample model data matching README pricing tiers~~
+- ~~Show model name, type (image/video), pricing per unit~~
+- ~~Verify: models list renders with correct data~~
+- ~~Commit: models tab~~
 
 ## Step 6: Ask Tab — Prompt Composer
 

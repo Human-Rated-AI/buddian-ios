@@ -2,7 +2,32 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        Text("Hello, Buddian!")
+        TabView {
+            AskView()
+                .tabItem {
+                    Label("Ask", systemImage: "bubble.left.and.bubble.right")
+                }
+
+            ModelsView()
+                .tabItem {
+                    Label("Models", systemImage: "cpu")
+                }
+
+            LibraryView()
+                .tabItem {
+                    Label("Library", systemImage: "photo.on.rectangle")
+                }
+
+            WalletView()
+                .tabItem {
+                    Label("Wallet", systemImage: "creditcard")
+                }
+
+            ShieldView()
+                .tabItem {
+                    Label("Shield", systemImage: "lock.shield")
+                }
+        }
     }
 }
 

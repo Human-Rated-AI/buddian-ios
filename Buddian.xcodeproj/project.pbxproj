@@ -10,6 +10,11 @@
 		A10001000000000000000001 /* BuddianApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000001; };
 		A10001000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000002; };
 		A10001000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000003; };
+		A10001000000000000000004 /* AskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000005; };
+		A10001000000000000000005 /* ModelsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000006; };
+		A10001000000000000000006 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000007; };
+		A10001000000000000000007 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000008; };
+		A10001000000000000000008 /* ShieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000009; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -17,6 +22,11 @@
 		A10002000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A10002000000000000000003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10002000000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10002000000000000000005 /* AskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskView.swift; sourceTree = "<group>"; };
+		A10002000000000000000006 /* ModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsView.swift; sourceTree = "<group>"; };
+		A10002000000000000000007 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		A10002000000000000000008 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
+		A10002000000000000000009 /* ShieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldView.swift; sourceTree = "<group>"; };
 		A10002000000000000000010 /* Buddian.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Buddian.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -44,6 +54,7 @@
 			children = (
 				A10002000000000000000001 /* BuddianApp.swift */,
 				A10002000000000000000002 /* ContentView.swift */,
+				A10004000000000000000004 /* Views */,
 				A10002000000000000000003 /* Assets.xcassets */,
 				A10002000000000000000004 /* Info.plist */,
 			);
@@ -56,6 +67,18 @@
 				A10002000000000000000010 /* Buddian.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A10004000000000000000004 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A10002000000000000000005 /* AskView.swift */,
+				A10002000000000000000006 /* ModelsView.swift */,
+				A10002000000000000000007 /* LibraryView.swift */,
+				A10002000000000000000008 /* WalletView.swift */,
+				A10002000000000000000009 /* ShieldView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -129,6 +152,11 @@
 			files = (
 				A10001000000000000000001 /* BuddianApp.swift in Sources */,
 				A10001000000000000000002 /* ContentView.swift in Sources */,
+				A10001000000000000000004 /* AskView.swift in Sources */,
+				A10001000000000000000005 /* ModelsView.swift in Sources */,
+				A10001000000000000000006 /* LibraryView.swift in Sources */,
+				A10001000000000000000007 /* WalletView.swift in Sources */,
+				A10001000000000000000008 /* ShieldView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

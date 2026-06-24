@@ -12,13 +12,13 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: `xcodebuild build` succeeds~~
 - ~~Commit: initial scaffold~~
 
-## Step 2: Tab-Based Navigation
+## ~~Step 2: Tab-Based Navigation~~ ✅
 
-- Create `ContentView` with `TabView` containing 5 tabs: Ask, Models, Library, Wallet, Shield
-- Use SF Symbols for tab icons
-- Each tab gets its own view file under `Views/`
-- Verify: app launches in Simulator, all 5 tabs visible and tappable
-- Commit: tab navigation
+- ~~Create `ContentView` with `TabView` containing 5 tabs: Ask, Models, Library, Wallet, Shield~~
+- ~~Use SF Symbols for tab icons~~
+- ~~Each tab gets its own view file under `Views/`~~
+- ~~Verify: app launches in Simulator, all 5 tabs visible and tappable~~
+- ~~Commit: tab navigation~~
 
 ## Step 3: App Theme & Design System
 

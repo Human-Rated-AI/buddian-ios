@@ -12,6 +12,13 @@ struct AIModel: Identifiable, Codable, Sendable {
     let pricePerUnit: Double
     let unitLabel: String
     let description: String
+
+    var unitSuffix: String {
+        switch type {
+        case .image: return "image"
+        case .video: return "s"
+        }
+    }
 }
 
 extension AIModel {

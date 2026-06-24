@@ -3,6 +3,7 @@ import SwiftUI
 struct ModelsView: View {
     @State private var models: [RemoteModel] = []
     @State private var isLoading = false
+    @State private var errorMessage: String?
     @State private var selectedFilter: ModelFilter = .all
 
     enum ModelFilter: String, CaseIterable {
@@ -35,6 +36,24 @@ struct ModelsView: View {
                 if models.isEmpty && isLoading {
                     Spacer()
                     ProgressView("Loading models...")
+                    Spacer()
+                } else if models.isEmpty, let error = errorMessage {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundStyle(.orange)
+                        Text("Failed to load models")
+                            .font(.headline)
+                        Text(error)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                        Button("Retry") {
+                            Task { await loadModels() }
+                        }
+                    }
+                    .padding()
                     Spacer()
                 } else if models.isEmpty {
                     Spacer()
@@ -87,10 +106,11 @@ struct ModelsView: View {
 
     private func loadModels() async {
         isLoading = models.isEmpty
+        errorMessage = nil
         do {
             models = try await APIClient.shared.fetchModels()
         } catch {
-            print("Failed to load models: \(error)")
+            errorMessage = error.localizedDescription
         }
         isLoading = false
     }

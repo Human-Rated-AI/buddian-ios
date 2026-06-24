@@ -9,6 +9,11 @@ struct AskView: View {
         return model.pricePerUnit
     }
 
+    private var estimatedCostLabel: String {
+        guard let model = selectedModel else { return "$0.000" }
+        return String(format: "$%.3f/%@", model.pricePerUnit, model.unitSuffix)
+    }
+
     private var isGenerateDisabled: Bool {
         prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedModel == nil
     }
@@ -54,7 +59,7 @@ struct AskView: View {
                     HStack {
                         Text("Estimated Cost")
                         Spacer()
-                        Text(String(format: "$%.3f", estimatedCost))
+                        Text(estimatedCostLabel)
                             .fontWeight(.medium)
                     }
                 }

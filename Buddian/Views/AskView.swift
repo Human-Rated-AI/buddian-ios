@@ -18,7 +18,26 @@ struct AskView: View {
             Form {
                 Section {
                     ForEach(AIModel.allModels) { model in
-                        modelRow(model)
+                        Button {
+                            selectedModel = model
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(model.name)
+                                        .foregroundStyle(.primary)
+                                    Text(model.type.rawValue)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                if selectedModel?.id == model.id {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(Color.accentColor)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
                     }
                 } header: {
                     Text("Model")
@@ -47,29 +66,6 @@ struct AskView: View {
             .navigationTitle("Ask")
             .dismissKeyboardOnTap()
         }
-    }
-
-    @ViewBuilder
-    private func modelRow(_ model: AIModel) -> some View {
-        Button {
-            selectedModel = model
-        } label: {
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(model.name)
-                        .foregroundStyle(.primary)
-                    Text(model.type.rawValue)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                if selectedModel?.id == model.id {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color.accentColor)
-                }
-            }
-        }
-        .buttonStyle(.plain)
     }
 }
 

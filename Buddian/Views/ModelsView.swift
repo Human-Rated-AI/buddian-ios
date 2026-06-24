@@ -28,15 +28,20 @@ struct ModelsView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 if modelCache.isLoading && modelCache.models.isEmpty {
+                    Spacer()
                     ProgressView("Loading models...")
+                    Spacer()
                 } else if modelCache.models.isEmpty {
+                    Spacer()
                     EmptyStateView(
                         icon: "cpu",
                         title: "No Models Available",
                         message: "Check back later for available models."
                     )
+                    Spacer()
                 } else {
                     filterBar
+                    Divider()
                     modelList
                 }
             }
@@ -68,12 +73,15 @@ struct ModelsView: View {
             .padding(.horizontal)
             .padding(.vertical, 8)
         }
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemBackground))
     }
 
     private var modelList: some View {
         List(filteredModels) { model in
             RemoteModelRow(model: model)
         }
+        .listStyle(.plain)
     }
 }
 

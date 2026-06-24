@@ -23,6 +23,8 @@
 		A1000100000000000000000F /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000011; };
 		A10001000000000000000010 /* AIModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000012; };
 		A10001000000000000000011 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000013; };
+		A10001000000000000000012 /* ModelsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000014; };
+		A10001000000000000000013 /* AccountResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000015; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +45,8 @@
 		A10002000000000000000011 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		A10002000000000000000012 /* AIModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModel.swift; sourceTree = "<group>"; };
 		A10002000000000000000013 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A10002000000000000000014 /* ModelsResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsResponse.swift; sourceTree = "<group>"; };
+		A10002000000000000000015 /* AccountResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountResponse.swift; sourceTree = "<group>"; };
 		A10002000000000000000010 /* Buddian.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Buddian.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -117,6 +121,8 @@
 				A1000200000000000000000E /* APIError.swift */,
 				A1000200000000000000000F /* HealthResponse.swift */,
 				A10002000000000000000011 /* APIClient.swift */,
+				A10002000000000000000014 /* ModelsResponse.swift */,
+				A10002000000000000000015 /* AccountResponse.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -213,6 +219,8 @@
 				A1000100000000000000000F /* APIClient.swift in Sources */,
 				A10001000000000000000010 /* AIModel.swift in Sources */,
 				A10001000000000000000011 /* Theme.swift in Sources */,
+				A10001000000000000000012 /* ModelsResponse.swift in Sources */,
+				A10001000000000000000013 /* AccountResponse.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -92,3 +92,15 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - All 5 tabs render correctly: Ask, Models, Library, Wallet, Shield
 - No crashes, all screens render
 - Verified: MVP scaffold complete
+
+## Step 13: Fetch Models from API ✅
+
+- Extended `APIClient` with `/models` endpoint
+- Created `ModelsResponse` and `RemoteModel` Codable structs
+- Created `AccountResponse` for future use
+- ModelsView now fetches real models from api.buddian.com (68 models)
+- Shows loading state, error handling with retry
+- Displays model name, description, pricing, output modalities, TEE badge
+- Note: API currently returns text-only models (no image/video generation yet)
+- Verified: build succeeds, models load from API
+- Files: `Buddian/Networking/{ModelsResponse,AccountResponse,APIClient}.swift`, `Buddian/Views/ModelsView.swift`

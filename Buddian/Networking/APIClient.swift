@@ -7,6 +7,8 @@ class APIClient {
     private let baseURL = URL(string: "https://api.buddian.com")!
     private let session: URLSession
 
+    var sessionToken: String?
+
     private init() {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
@@ -17,11 +19,24 @@ class APIClient {
         try await get(path: "/health")
     }
 
+    func fetchModels() async throws -> [RemoteModel] {
+        let response: ModelsResponse = try await get(path: "/models")
+        return response.data
+    }
+
+    func fetchAccount() async throws -> AccountResponse {
+        try await get(path: "/web/me")
+    }
+
     private func get<T: Decodable>(path: String) async throws -> T {
         let url = baseURL.appendingPathComponent(path)
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        if let token = sessionToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
 
         do {
             let (data, response) = try await session.data(for: request)

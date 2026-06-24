@@ -94,10 +94,10 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: all tabs have proper nav bars and empty states~~
 - ~~Commit: navigation polish~~
 
-## Step 12: Final Build & Smoke Test
+## ~~Step 12: Final Build & Smoke Test~~ ✅
 
-- Full clean build
-- Run in Simulator on latest iOS
-- Test all 5 tabs navigate correctly
-- Verify: no crashes, all screens render
-- Commit: MVP ready
+- ~~Full clean build~~
+- ~~Run in Simulator on latest iOS~~
+- ~~Test all 5 tabs navigate correctly~~
+- ~~Verify: no crashes, all screens render~~
+- ~~Commit: MVP ready~~

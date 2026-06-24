@@ -89,3 +89,10 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Library tab already had empty state from Step 8
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Views/{ShieldView,ModelsView,LibraryView,WalletView}.swift`
+
+## Step 12: Final Build & Smoke Test ✅
+
+- Full clean build succeeded on iPhone 17 simulator (iOS 26.5)
+- All 5 tabs render correctly: Ask, Models, Library, Wallet, Shield
+- No crashes, all screens render
+- Verified: MVP scaffold complete

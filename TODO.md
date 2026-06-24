@@ -20,13 +20,13 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: app launches in Simulator, all 5 tabs visible and tappable~~
 - ~~Commit: tab navigation~~
 
-## Step 3: App Theme & Design System
+## ~~Step 3: App Theme & Design System~~ ✅
 
-- Define color palette (semantic system colors, light/dark support)
-- Create reusable components: `CardView`, `PrimaryButton`, `SectionHeader`
-- Apply consistent padding, spacing, typography
-- Verify: all tabs render with consistent styling
-- Commit: design system
+- ~~Define color palette (semantic system colors, light/dark support)~~
+- ~~Create reusable components: `CardView`, `PrimaryButton`, `SectionHeader`~~
+- ~~Apply consistent padding, spacing, typography~~
+- ~~Verify: all tabs render with consistent styling~~
+- ~~Commit: design system~~
 
 ## Step 4: API Client Shell
 

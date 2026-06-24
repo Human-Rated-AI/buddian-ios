@@ -18,3 +18,10 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Each tab has its own view file under `Buddian/Views/`
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/ContentView.swift`, `Buddian/Views/{Ask,Models,Library,Wallet,Shield}View.swift`
+
+## Step 3: App Theme & Design System ✅
+
+- Created reusable components: `CardView`, `PrimaryButton`, `SectionHeader`, `EmptyStateView`
+- Uses semantic system colors with light/dark theme support
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Components/{CardView,PrimaryButton,SectionHeader,EmptyStateView}.swift`

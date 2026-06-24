@@ -42,3 +42,11 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Each row shows name, type badge, description, and price per unit
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Models/AIModel.swift`, `Buddian/Views/ModelsView.swift`
+
+## Step 6: Ask Tab — Prompt Composer ✅
+
+- Created `AskView` with tier selector (Standard/Confidential), model picker, prompt text editor
+- Shows estimated cost based on selected model
+- Generate button disabled when prompt is empty or no model selected
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Views/AskView.swift`

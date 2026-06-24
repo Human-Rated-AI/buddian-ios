@@ -45,13 +45,13 @@ See [DONE.md](DONE.md) for completed steps.
 - ~~Verify: models list renders with correct data~~
 - ~~Commit: models tab~~
 
-## Step 6: Ask Tab — Prompt Composer
+## ~~Step 6: Ask Tab — Prompt Composer~~ ✅
 
-- Create `AskView` with: model selector, prompt text field, tier selector (Standard/Confidential)
-- Show estimated cost preview (placeholder calculation)
-- "Generate" button (disabled until valid input)
-- Verify: form renders, inputs are interactive, button state changes
-- Commit: ask tab
+- ~~Create `AskView` with: model selector, prompt text field, tier selector (Standard/Confidential)~~
+- ~~Show estimated cost preview (placeholder calculation)~~
+- ~~"Generate" button (disabled until valid input)~~
+- ~~Verify: form renders, inputs are interactive, button state changes~~
+- ~~Commit: ask tab~~
 
 ## Step 7: Wallet Tab — Balance & Credits
 

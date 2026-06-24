@@ -45,8 +45,8 @@ extension AIModel {
             name: "Stable Video Diffusion",
             type: .video,
             pricePerUnit: 0.15,
-            unitLabel: "per second",
-            description: "Image-to-video generation"
+            unitLabel: "per second of video",
+            description: "Image-to-video generation (~5 sec clips)"
         ),
     ]
 }

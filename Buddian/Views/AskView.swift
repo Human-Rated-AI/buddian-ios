@@ -32,7 +32,7 @@ struct AskView: View {
                                 Spacer()
                                 if selectedModel?.id == model.id {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.blue)
+                                        .foregroundStyle(AppTheme.badgeBackground(for: model.type))
                                 }
                             }
                         }
@@ -48,8 +48,13 @@ struct AskView: View {
                     HStack {
                         Text("Estimated Cost")
                         Spacer()
-                        Text(String(format: "$%.3f", estimatedCost))
-                            .foregroundStyle(.green)
+                        HStack(spacing: 4) {
+                            Image(systemName: "dollarsign.circle.fill")
+                                .foregroundStyle(AppTheme.priceForeground)
+                            Text(String(format: "$%.3f", estimatedCost))
+                                .foregroundStyle(AppTheme.priceForeground)
+                        }
+                        .fontWeight(.medium)
                     }
                 }
 

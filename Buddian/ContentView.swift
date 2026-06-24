@@ -22,11 +22,6 @@ struct ContentView: View {
                 .tabItem {
                     Label("Wallet", systemImage: "creditcard")
                 }
-
-            ShieldView()
-                .tabItem {
-                    Label("Shield", systemImage: "lock.shield")
-                }
         }
     }
 }

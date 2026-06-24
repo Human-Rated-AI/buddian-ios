@@ -29,17 +29,23 @@ private struct ModelRow: View {
                 Spacer()
                 Text(model.type.rawValue)
                     .font(.caption)
+                    .fontWeight(.medium)
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(.blue.opacity(0.1))
+                    .padding(.vertical, 4)
+                    .background(AppTheme.badgeBackground(for: model.type))
+                    .foregroundStyle(AppTheme.badgeForeground(for: model.type))
                     .clipShape(Capsule())
             }
             Text(model.description)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Text(String(format: "$%.3f %@", model.pricePerUnit, model.unitLabel))
-                .font(.caption)
-                .foregroundStyle(.green)
+            HStack {
+                Image(systemName: "dollarsign.circle.fill")
+                    .foregroundStyle(AppTheme.priceForeground)
+                Text(String(format: "$%.3f %@", model.pricePerUnit, model.unitLabel))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
         }
         .padding(.vertical, 4)
     }

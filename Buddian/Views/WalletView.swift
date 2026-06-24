@@ -28,7 +28,8 @@ struct WalletView: View {
                         Spacer()
                         Text("40m")
                             .font(.title3)
-                            .foregroundStyle(.blue)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.primary)
                     }
                 }
 

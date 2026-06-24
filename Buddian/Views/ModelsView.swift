@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct ModelsView: View {
-    @EnvironmentObject private var modelCache: ModelCache
+    @State private var models: [RemoteModel] = []
+    @State private var isLoading = false
     @State private var selectedFilter: ModelFilter = .all
 
     enum ModelFilter: String, CaseIterable {
@@ -14,13 +15,13 @@ struct ModelsView: View {
     private var filteredModels: [RemoteModel] {
         switch selectedFilter {
         case .all:
-            return modelCache.models
+            return models
         case .text:
-            return modelCache.models.filter { $0.outputModalities.contains("text") }
+            return models.filter { $0.outputModalities.contains("text") }
         case .image:
-            return modelCache.models.filter { $0.outputModalities.contains("image") }
+            return models.filter { $0.outputModalities.contains("image") }
         case .video:
-            return modelCache.models.filter { $0.outputModalities.contains("video") }
+            return models.filter { $0.outputModalities.contains("video") }
         }
     }
 
@@ -28,12 +29,14 @@ struct ModelsView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 filterBar
+
                 Divider()
-                if modelCache.models.isEmpty && modelCache.isLoading {
+
+                if models.isEmpty && isLoading {
                     Spacer()
                     ProgressView("Loading models...")
                     Spacer()
-                } else if modelCache.models.isEmpty {
+                } else if models.isEmpty {
                     Spacer()
                     EmptyStateView(
                         icon: "cpu",
@@ -42,17 +45,18 @@ struct ModelsView: View {
                     )
                     Spacer()
                 } else {
-                    modelList
+                    List(filteredModels) { model in
+                        RemoteModelRow(model: model)
+                    }
+                    .listStyle(.plain)
                 }
             }
             .navigationTitle("Models")
-            .onAppear {
-                if modelCache.models.isEmpty {
-                    Task { await modelCache.refresh() }
-                }
+            .task {
+                await loadModels()
             }
             .refreshable {
-                await modelCache.refresh()
+                await loadModels()
             }
         }
     }
@@ -81,11 +85,14 @@ struct ModelsView: View {
         .background(Color(.systemBackground))
     }
 
-    private var modelList: some View {
-        List(filteredModels) { model in
-            RemoteModelRow(model: model)
+    private func loadModels() async {
+        isLoading = models.isEmpty
+        do {
+            models = try await APIClient.shared.fetchModels()
+        } catch {
+            print("Failed to load models: \(error)")
         }
-        .listStyle(.plain)
+        isLoading = false
     }
 }
 
@@ -135,5 +142,4 @@ private struct RemoteModelRow: View {
 
 #Preview {
     ModelsView()
-        .environmentObject(ModelCache.shared)
 }

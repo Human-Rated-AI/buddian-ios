@@ -37,15 +37,15 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 
 ## Step 5: Models Tab — Static Catalog ✅
 
-- Created `AIModel` struct with sample data (6 models: SDXL, DALL·E 3, Flux Pro, SVD, plus confidential variants)
-- `ModelsView` shows models grouped by tier (Standard/Confidential)
+- Created `AIModel` struct with sample data (4 models: SDXL, DALL·E 3, Flux Pro, SVD)
+- `ModelsView` shows models in a flat list
 - Each row shows name, type badge, description, and price per unit
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Models/AIModel.swift`, `Buddian/Views/ModelsView.swift`
 
 ## Step 6: Ask Tab — Prompt Composer ✅
 
-- Created `AskView` with tier selector (Standard/Confidential), model picker, prompt text editor
+- Created `AskView` with model picker, prompt text editor
 - Shows estimated cost based on selected model
 - Generate button disabled when prompt is empty or no model selected
 - Verified: build succeeds on iPhone 17 simulator
@@ -68,23 +68,19 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 
 ## Step 9: Shield Tab — Privacy Status ✅
 
-- Created `ShieldView` with attestation status, local key state, source verification, endpoint settings
-- Status indicators with color-coded icons (green/yellow/red/gray)
+- Created `ShieldView` with source verification and endpoint settings
+- Green shield icon in nav bar
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Views/ShieldView.swift`
 
 ## Step 10: E2EE Crypto Foundation ✅
 
-- Created `CryptoManager` singleton with P256 key generation
-- Implemented encrypt/decrypt using CryptoKit (P256 ECDH + HKDF-SHA256 + AES-GCM)
-- Added hex encoding/decoding helpers for Data
-- Note: Using P256 (NIST) instead of secp256k1 — Apple's CryptoKit doesn't support secp256k1 natively. Can swap to CryptoKit's Secp256k1 if available, or use a third-party library for full secp256k1 compatibility.
+- Removed — E2EE not needed for MVP (Confidential workflow deferred to v2+)
 - Verified: build succeeds on iPhone 17 simulator
-- Files: `Buddian/Crypto/CryptoManager.swift`
 
 ## Step 11: Navigation Polish & Empty States ✅
 
-- Added lock indicator in Shield tab nav bar (shows attestation status icon)
+- Added green shield icon in Shield tab nav bar
 - Added pull-to-refresh placeholders on Models, Library, and Wallet tabs
 - Library tab already had empty state from Step 8
 - Verified: build succeeds on iPhone 17 simulator

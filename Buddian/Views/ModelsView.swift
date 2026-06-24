@@ -6,14 +6,8 @@ struct ModelsView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(InferenceTier.allCases, id: \.self) { tier in
-                    Section {
-                        ForEach(models.filter { $0.tier == tier }) { model in
-                            ModelRow(model: model)
-                        }
-                    } header: {
-                        SectionHeader(title: tier.rawValue)
-                    }
+                ForEach(models) { model in
+                    ModelRow(model: model)
                 }
             }
             .navigationTitle("Models")

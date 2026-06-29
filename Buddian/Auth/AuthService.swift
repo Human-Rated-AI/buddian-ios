@@ -175,13 +175,14 @@ extension AuthService: ASAuthorizationControllerDelegate {
 extension AuthService: ASAuthorizationControllerPresentationContextProviding {
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         NSLog("[Auth] presentationAnchor requested")
-        MainActor.assumeIsolated {
-            guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let window = scene.windows.first else {
-                fatalError("No window for Apple Sign In")
+        var anchor: ASPresentationAnchor!
+        DispatchQueue.main.sync {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first {
+                anchor = window
             }
-            return window
         }
+        return anchor
     }
 }
 

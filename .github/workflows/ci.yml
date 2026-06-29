@@ -13,39 +13,20 @@ concurrency:
 jobs:
   build:
     name: Build & Verify
-    runs-on: macos-15
+    runs-on: macos-14
     timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
-
       - name: Decode GoogleService-Info.plist
         env:
           GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
         run: echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > Buddian/GoogleService-Info.plist
 
-      - name: Resolve SPM packages
-        run: |
-          xcodebuild -resolvePackageDependencies \
-            -project Buddian.xcodeproj \
-            -scheme Buddian \
-            -clonedSourcePackagesDirPath .spm-packages
-
-      - name: Build for iOS Simulator
-        run: |
-          xcodebuild build \
-            -project Buddian.xcodeproj \
-            -scheme Buddian \
-            -sdk iphonesimulator \
-            -configuration Debug \
-            -clonedSourcePackagesDirPath .spm-packages \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+      - name: Build
+        run: ./build.sh
 
       - name: Verify no secrets in source
         run: |

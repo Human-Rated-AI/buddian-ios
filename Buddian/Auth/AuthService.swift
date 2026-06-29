@@ -126,9 +126,10 @@ extension AuthService: ASAuthorizationControllerDelegate {
         }
 
         let credential = OAuthProvider.credential(
-            withProviderID: "apple.com",
+            providerID: AuthProviderID.apple,
             idToken: idTokenString,
-            rawNonce: nonce
+            rawNonce: nonce,
+            accessToken: nil
         )
 
         Task { @MainActor in
@@ -159,11 +160,13 @@ extension AuthService: ASAuthorizationControllerDelegate {
 
 extension AuthService: ASAuthorizationControllerPresentationContextProviding {
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else {
-            fatalError("No window available for Apple Sign In")
+        MainActor.assumeIsolated {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = windowScene.windows.first else {
+                fatalError("No window available for Apple Sign In")
+            }
+            return window
         }
-        return window
     }
 }
 

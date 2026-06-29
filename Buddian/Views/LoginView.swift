@@ -63,6 +63,9 @@ struct LoginView: View {
                 .frame(height: 40)
         }
         .background(Color(.systemBackground))
+        .onAppear {
+            NSLog("[Login] LoginView appeared, authService: \(authService)")
+        }
     }
 }
 

@@ -13,6 +13,9 @@ class APIClient {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
         self.session = URLSession(configuration: config)
+
+        // Restore session from Keychain on init
+        sessionToken = SessionManager.shared.sessionToken
     }
 
     func healthCheck() async throws -> HealthResponse {
@@ -26,6 +29,29 @@ class APIClient {
 
     func fetchAccount() async throws -> AccountResponse {
         try await get(path: "/web/me")
+    }
+
+    func post<Body: Encodable, T: Decodable>(path: String, body: Body) async throws -> T {
+        let url = baseURL.appendingPathComponent(path)
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = try JSONEncoder().encode(body)
+
+        if let token = sessionToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        do {
+            let (data, response) = try await session.data(for: request)
+            try validateResponse(response, data: data)
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch let error as APIError {
+            throw error
+        } catch {
+            throw APIError.networkError(error)
+        }
     }
 
     private func get<T: Decodable>(path: String) async throws -> T {

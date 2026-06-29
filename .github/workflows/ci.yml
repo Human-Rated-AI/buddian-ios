@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Verify
+    runs-on: macos-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create GoogleService-Info.plist stub
+        run: |
+          cat > Buddian/GoogleService-Info.plist << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>API_KEY</key>
+            <string>CI_PLACEHOLDER</string>
+            <key>GCM_SENDER_ID</key>
+            <string>000000000000</string>
+            <key>PLIST_VERSION</key>
+            <string>1</string>
+            <key>BUNDLE_ID</key>
+            <string>com.humanratedai.Buddian</string>
+            <key>PROJECT_ID</key>
+            <string>human-rated-ai</string>
+            <key>STORAGE_BUCKET</key>
+            <string>human-rated-ai.appspot.com</string>
+            <key>IS_ADS_ENABLED</key>
+            <false/>
+            <key>IS_ANALYTICS_ENABLED</key>
+            <false/>
+            <key>IS_APPINVITE_ENABLED</key>
+            <false/>
+            <key>IS_GCM_ENABLED</key>
+            <false/>
+            <key>IS_SIGNIN_ENABLED</key>
+            <true/>
+            <key>GOOGLE_APP_ID</key>
+            <string>1:000000000000:ios:0000000000000000</string>
+            <key>CLIENT_ID</key>
+            <string>000000000000-placeholder.apps.googleusercontent.com</string>
+            <key>REVERSED_CLIENT_ID</key>
+            <string>com.googleusercontent.apps.000000000000-placeholder</string>
+          </dict>
+          </plist>
+          PLIST
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      - name: Resolve SPM packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project Buddian.xcodeproj \
+            -scheme Buddian \
+            -clonedSourcePackagesDirPath .spm-packages
+
+      - name: Build (Debug, iOS Simulator)
+        run: |
+          xcodebuild build \
+            -project Buddian.xcodeproj \
+            -scheme Buddian \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -configuration Debug \
+            -clonedSourcePackagesDirPath .spm-packages \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
+
+      - name: Check for Swift warnings (analyzer)
+        run: |
+          xcodebuild build \
+            -project Buddian.xcodeproj \
+            -scheme Buddian \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -configuration Debug \
+            -clonedSourcePackagesDirPath .spm-packages \
+            RUN_CLANG_STATIC_ANALYZER=YES \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
+
+      - name: Verify no secrets in source
+        run: |
+          echo "Checking for leaked secrets..."
+          if grep -r "sk_live\|sk_test\|password.*=.*['\"]" --include="*.swift" --include="*.plist" .; then
+            echo "ERROR: Possible secrets found in source!"
+            exit 1
+          fi
+          echo "No secrets found."
+
+      - name: Verify GoogleService-Info.plist is gitignored
+        run: |
+          if git ls-files --error-unmatch Buddian/GoogleService-Info.plist 2>/dev/null; then
+            echo "ERROR: GoogleService-Info.plist is tracked by git — should be gitignored!"
+            exit 1
+          fi
+          echo "GoogleService-Info.plist is properly gitignored."
+
+      - name: Check file count
+        run: |
+          SWIFT_COUNT=$(find Buddian -name "*.swift" | wc -l | tr -d ' ')
+          echo "Swift files: $SWIFT_COUNT"
+          if [ "$SWIFT_COUNT" -lt 15 ]; then
+            echo "ERROR: Expected at least 15 Swift files, found $SWIFT_COUNT"
+            exit 1
+          fi

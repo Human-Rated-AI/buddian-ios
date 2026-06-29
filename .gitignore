@@ -37,6 +37,9 @@ fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
 
+# Firebase (contains project-specific API keys)
+GoogleService-Info.plist
+
 # macOS
 .DS_Store
 .AppleDouble

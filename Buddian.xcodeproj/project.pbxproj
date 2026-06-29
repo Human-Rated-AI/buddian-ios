@@ -26,6 +26,13 @@
 		A10001000000000000000012 /* ModelsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000014; };
 		A10001000000000000000013 /* AccountResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000015; };
 		A10001000000000000000014 /* ModelCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000016; };
+		A10001000000000000000015 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000017; };
+		A10001000000000000000016 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000018; };
+		A10001000000000000000017 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000019; };
+		A10001000000000000000018 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000200000000000000001A; };
+		A10001000000000000000019 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000001; };
+		A1000100000000000000001A /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000002; };
+		A1000100000000000000001B /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000003; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +57,11 @@
 		A10002000000000000000015 /* AccountResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountResponse.swift; sourceTree = "<group>"; };
 		A10002000000000000000016 /* ModelCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCache.swift; sourceTree = "<group>"; };
 		A10002000000000000000010 /* Buddian.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Buddian.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10002000000000000000017 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		A10002000000000000000018 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
+		A10002000000000000000019 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		A1000200000000000000001A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		A1000200000000000000001B /* Buddian.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Buddian.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +69,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10001000000000000000019 /* FirebaseAuth in Frameworks */,
+				A1000100000000000000001A /* FirebaseCore in Frameworks */,
+				A1000100000000000000001B /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,11 +92,14 @@
 				A10002000000000000000001 /* BuddianApp.swift */,
 				A10002000000000000000002 /* ContentView.swift */,
 				A10002000000000000000013 /* Theme.swift */,
+				A10004000000000000000008 /* Auth */,
 				A10004000000000000000004 /* Views */,
 				A10004000000000000000005 /* Components */,
 				A10004000000000000000006 /* Networking */,
 				A10004000000000000000007 /* Models */,
 				A10002000000000000000003 /* Assets.xcassets */,
+				A1000200000000000000001A /* GoogleService-Info.plist */,
+				A1000200000000000000001B /* Buddian.entitlements */,
 				A10002000000000000000004 /* Info.plist */,
 			);
 			path = Buddian;
@@ -98,6 +116,7 @@
 		A10004000000000000000004 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				A10002000000000000000019 /* LoginView.swift */,
 				A10002000000000000000005 /* AskView.swift */,
 				A10002000000000000000006 /* ModelsView.swift */,
 				A10002000000000000000007 /* LibraryView.swift */,
@@ -138,6 +157,15 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
+		A10004000000000000000008 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				A10002000000000000000017 /* AuthService.swift */,
+				A10002000000000000000018 /* SessionManager.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -154,6 +182,11 @@
 			dependencies = (
 			);
 			name = Buddian;
+			packageProductDependencies = (
+				A1000B000000000000000001 /* FirebaseAuth */,
+				A1000B000000000000000002 /* FirebaseCore */,
+				A1000B000000000000000003 /* GoogleSignIn */,
+			);
 			productName = Buddian;
 			productReference = A10002000000000000000010 /* Buddian.app */;
 			productType = "com.apple.product-type.application";
@@ -182,6 +215,10 @@
 				Base,
 			);
 			mainGroup = A10004000000000000000001;
+			packageReferences = (
+				A1000A000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A1000A000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn" */,
+			);
 			productRefGroup = A10004000000000000000003 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -197,6 +234,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10001000000000000000003 /* Assets.xcassets in Resources */,
+				A10001000000000000000018 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -225,6 +263,9 @@
 				A10001000000000000000012 /* ModelsResponse.swift in Sources */,
 				A10001000000000000000013 /* AccountResponse.swift in Sources */,
 				A10001000000000000000014 /* ModelCache.swift in Sources */,
+				A10001000000000000000015 /* AuthService.swift in Sources */,
+				A10001000000000000000016 /* SessionManager.swift in Sources */,
+				A10001000000000000000017 /* LoginView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -355,6 +396,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Buddian/Buddian.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -382,6 +424,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Buddian/Buddian.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -426,6 +469,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1000A000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+		A1000A000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1000B000000000000000001 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000A000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		A1000B000000000000000002 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000A000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		A1000B000000000000000003 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000A000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A10008000000000000000001 /* Project object */;
 }

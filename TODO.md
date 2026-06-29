@@ -15,14 +15,14 @@
 
 ### 1. Firebase Authentication
 
-- [ ] Add Firebase iOS SDK via Swift Package Manager
-- [ ] Add `GoogleService-Info.plist` (Firebase config, safe for public repo)
-- [ ] Implement Sign in with Apple (`AuthenticationServices`)
+- [x] Add Firebase iOS SDK via Swift Package Manager
+- [x] Add `GoogleService-Info.plist` (Firebase config, safe for public repo)
+- [x] Implement Sign in with Apple (`AuthenticationServices`)
 - [ ] Implement Google Sign In (`GoogleSignIn` framework)
-- [ ] Exchange Firebase ID token for Buddian session via `POST /web/auth/firebase`
-- [ ] Store session token in Keychain
-- [ ] Handle auth state: logged in → show app, logged out → show login screen
-- [ ] Auto-login on app launch if session token exists
+- [x] Exchange Firebase ID token for Buddian session via `POST /web/auth/firebase`
+- [x] Store session token in Keychain
+- [x] Handle auth state: logged in → show app, logged out → show login screen
+- [x] Auto-login on app launch if session token exists
 
 ### 2. Generate Tab
 

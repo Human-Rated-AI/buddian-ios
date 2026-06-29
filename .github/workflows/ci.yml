@@ -40,18 +40,14 @@ jobs:
 
       - name: Build for iOS Simulator
         run: |
-          # Find first available iOS Simulator
-          DEST=$(xcrun simctl list devices available | grep "iPhone" | grep -v "unavailable" | head -1 | sed 's/.*(\(.*\)).*/\1/')
+          # Find first available iPhone Simulator UUID
+          DEST=$(xcrun simctl list devices available | grep "iPhone" | grep -v "unavailable" | head -1 | grep -oE '[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}')
           if [ -z "$DEST" ]; then
-            echo "No iPhone simulator available, trying any iOS device..."
-            DEST=$(xcrun simctl list devices available | grep "iOS" | grep -v "unavailable" | head -1 | sed 's/.*(\(.*\)).*/\1/')
-          fi
-          if [ -z "$DEST" ]; then
-            echo "ERROR: No iOS Simulator found"
+            echo "ERROR: No iPhone Simulator found"
             xcrun simctl list devices
             exit 1
           fi
-          echo "Using simulator: $DEST"
+          echo "Using simulator UUID: $DEST"
           xcodebuild build \
             -project Buddian.xcodeproj \
             -scheme Buddian \

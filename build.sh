@@ -23,7 +23,7 @@ if [ "${2:-}" != "" ]; then
     DESTINATION="$2"
 else
     # Use xcrun simctl for reliable detection — skips placeholders
-    DEVICE_ID=$(xcrun simctl list devices available | grep -v "unavailable" | grep "iPhone" | head -1 | sed 's/.*(\([A-F0-9-]*\)).*/\1/')
+    DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone" | grep -v "unavailable" | head -1 | grep -oE '[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}')
     if [ -n "$DEVICE_ID" ]; then
         DESTINATION="platform=iOS Simulator,id=$DEVICE_ID"
         echo "Auto-detected simulator: $DESTINATION"

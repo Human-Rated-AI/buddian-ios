@@ -3,6 +3,7 @@ import FirebaseAuth
 import AuthenticationServices
 import CryptoKit
 
+@MainActor
 final class AuthService: NSObject, ObservableObject {
     static let shared = AuthService()
 
@@ -10,7 +11,7 @@ final class AuthService: NSObject, ObservableObject {
     @Published var errorMessage: String?
 
     private var currentNonce: String?
-    private var authorizationController: ASAuthorizationController?
+    private var authController: ASAuthorizationController?
     private let sessionManager = SessionManager.shared
 
     var isAuthenticated: Bool {
@@ -37,7 +38,7 @@ final class AuthService: NSObject, ObservableObject {
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
         controller.presentationContextProvider = self
-        authorizationController = controller
+        authController = controller
 
         NSLog("[Auth] Calling performRequests")
         controller.performRequests()
@@ -48,24 +49,24 @@ final class AuthService: NSObject, ObservableObject {
         do {
             try Auth.auth().signOut()
         } catch {
-            NSLog("[Auth] Firebase sign out error: \(error)")
+            NSLog("[Auth] signOut error: \(error)")
         }
         sessionManager.clearSession()
         APIClient.shared.sessionToken = nil
     }
 
-    // MARK: - Firebase Token Exchange
+    // MARK: - Token Exchange
 
     private func exchangeToken(firebaseUser: User) async {
-        await MainActor.run { isLoading = true; errorMessage = nil }
+        isLoading = true
+        errorMessage = nil
 
         do {
             NSLog("[Auth] Getting Firebase ID token")
             let idToken = try await firebaseUser.getIDToken()
-            NSLog("[Auth] Got token, exchanging for session")
+            NSLog("[Auth] Got token, calling /web/auth/firebase")
 
-            let account = APIClient.shared
-            let response: AuthResponse = try await account.post(
+            let response: AuthResponse = try await APIClient.shared.post(
                 path: "/web/auth/firebase",
                 body: [
                     "firebase_token": idToken,
@@ -73,21 +74,19 @@ final class AuthService: NSObject, ObservableObject {
                 ]
             )
 
-            NSLog("[Auth] Got session, uid: \(response.account.uid)")
-            await MainActor.run {
-                sessionManager.saveSession(
-                    token: response.sessionToken,
-                    uid: response.account.uid,
-                    email: response.account.email
-                )
-                APIClient.shared.sessionToken = response.sessionToken
-            }
+            NSLog("[Auth] Session obtained for uid: \(response.account.uid)")
+            sessionManager.saveSession(
+                token: response.sessionToken,
+                uid: response.account.uid,
+                email: response.account.email
+            )
+            APIClient.shared.sessionToken = response.sessionToken
         } catch {
-            NSLog("[Auth] Exchange error: \(error)")
-            await MainActor.run { errorMessage = error.localizedDescription }
+            NSLog("[Auth] Exchange failed: \(error)")
+            errorMessage = error.localizedDescription
         }
 
-        await MainActor.run { isLoading = false }
+        isLoading = false
     }
 
     // MARK: - Helpers
@@ -109,38 +108,34 @@ final class AuthService: NSObject, ObservableObject {
     }
 
     private func sha256(_ input: String) -> String {
-        let inputData = Data(input.utf8)
-        let hashed = SHA256.hash(data: inputData)
-        return hashed.compactMap { String(format: "%02x", $0) }.joined()
+        SHA256.hash(data: Data(input.utf8)).compactMap { String(format: "%02x", $0) }.joined()
     }
 }
 
 // MARK: - ASAuthorizationControllerDelegate
 
 extension AuthService: ASAuthorizationControllerDelegate {
-    func authorizationController(
+    nonisolated func authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithAuthorization authorization: ASAuthorization
     ) {
-        NSLog("[Auth] Apple authorization received")
+        NSLog("[Auth] Apple credential received")
 
         guard let appleCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
-            NSLog("[Auth] ERROR: Not AppleID credential")
+            NSLog("[Auth] ERROR: not AppleID credential")
             return
         }
-
         guard let identityToken = appleCredential.identityToken,
               let tokenStr = String(data: identityToken, encoding: .utf8) else {
-            NSLog("[Auth] ERROR: No identity token")
+            NSLog("[Auth] ERROR: no identity token")
             return
         }
-
         guard let nonce = currentNonce else {
-            NSLog("[Auth] ERROR: No nonce")
+            NSLog("[Auth] ERROR: no nonce")
             return
         }
 
-        NSLog("[Auth] Creating Firebase credential")
+        NSLog("[Auth] Building Firebase OAuth credential")
         let credential = OAuthProvider.credential(
             providerID: AuthProviderID.apple,
             idToken: tokenStr,
@@ -148,32 +143,29 @@ extension AuthService: ASAuthorizationControllerDelegate {
             accessToken: nil
         )
 
-        Task {
-            NSLog("[Auth] Signing in to Firebase")
+        Task { @MainActor in
+            isLoading = true
             do {
+                NSLog("[Auth] Firebase signIn")
                 let result = try await Auth.auth().signIn(with: credential)
-                NSLog("[Auth] Firebase OK, uid: \(result.user.uid)")
+                NSLog("[Auth] Firebase OK: \(result.user.uid)")
                 await exchangeToken(firebaseUser: result.user)
             } catch {
                 NSLog("[Auth] Firebase error: \(error)")
-                await MainActor.run {
-                    isLoading = false
-                    errorMessage = error.localizedDescription
-                }
+                isLoading = false
+                errorMessage = error.localizedDescription
             }
         }
     }
 
-    func authorizationController(
+    nonisolated func authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithError error: Error
     ) {
         let code = (error as NSError).code
-        NSLog("[Auth] Apple error: \(error) code: \(code)")
+        NSLog("[Auth] Apple error code \(code): \(error)")
         if code != ASAuthorizationError.canceled.rawValue {
-            Task { @MainActor in
-                errorMessage = error.localizedDescription
-            }
+            Task { @MainActor in errorMessage = error.localizedDescription }
         }
     }
 }
@@ -181,17 +173,17 @@ extension AuthService: ASAuthorizationControllerDelegate {
 // MARK: - Presentation Context
 
 extension AuthService: ASAuthorizationControllerPresentationContextProviding {
-    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        NSLog("[Auth] presentationAnchor called")
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = scene.windows.first {
-            return window
+    nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        NSLog("[Auth] presentationAnchor requested")
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else {
+            fatalError("No window for Apple Sign In")
         }
-        fatalError("No window for Apple Sign In")
+        return window
     }
 }
 
-// MARK: - Response Models
+// MARK: - Models
 
 struct AuthResponse: Codable {
     let sessionToken: String

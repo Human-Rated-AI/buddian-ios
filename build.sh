@@ -4,9 +4,9 @@ set -euo pipefail
 # Buddian iOS build script
 # Usage: ./build.sh [clean] [destination]
 # Examples:
-#   ./build.sh                          # auto-detect first available simulator
-#   ./build.sh clean                    # clean + build
-#   ./build.sh "platform=iOS,name=iPhone 17e"  # specific device
+#   ./build.sh                                    # auto-detect first available simulator
+#   ./build.sh clean                              # clean + build
+#   ./build.sh "" "platform=iOS,name=iPhone 17e"  # specific device
 
 SCHEME="Buddian"
 PROJECT="Buddian.xcodeproj"
@@ -21,8 +21,6 @@ fi
 
 # Destination: use arg, or auto-detect first available simulator
 if [ "${2:-}" != "" ]; then
-    DESTINATION="$2"
-elif [ "${1:-}" = "clean" ] && [ "${2:-}" != "" ]; then
     DESTINATION="$2"
 else
     DESTINATION=$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -showdestinations 2>/dev/null \
@@ -54,7 +52,9 @@ xcodebuild -resolvePackageDependencies \
 
 echo ""
 echo "--- Building ($CONFIG) ---"
-set -o pipefail
+
+# Build and capture exit code properly
+set +e
 xcodebuild build \
     -project "$PROJECT" \
     -scheme "$SCHEME" \
@@ -64,21 +64,9 @@ xcodebuild build \
     CODE_SIGN_IDENTITY="" \
     CODE_SIGNING_REQUIRED=NO \
     CODE_SIGNING_ALLOWED=NO \
-    2>&1 | while IFS= read -r line; do
-        if [[ "$line" == *"error:"* ]]; then
-            echo -e "\033[0;31m$line\033[0m"
-        elif [[ "$line" == *"warning:"* ]]; then
-            echo -e "\033[0;33m$line\033[0m"
-        elif [[ "$line" == *"BUILD SUCCEEDED"* ]]; then
-            echo -e "\033[0;32m$line\033[0m"
-        elif [[ "$line" == *"BUILD FAILED"* ]]; then
-            echo -e "\033[0;31m$line\033[0m"
-        else
-            echo "$line"
-        fi
-    done
-
-BUILD_EXIT=$?
+    2>&1 | grep -E "(error:|warning:|BUILD SUCCEEDED|BUILD FAILED|note:)"
+BUILD_EXIT=${PIPESTATUS[0]}
+set -e
 
 echo ""
 if [ $BUILD_EXIT -eq 0 ]; then

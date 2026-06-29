@@ -14,7 +14,7 @@ jobs:
   build:
     name: Build & Verify
     runs-on: macos-15
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -22,6 +22,12 @@ jobs:
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      - name: Install iOS Simulator runtime
+        run: |
+          # Download and install the iOS 18.2 simulator runtime
+          xcodebuild -downloadPlatform iOS
+          sudo xcodebuild -importPlatform iOS
 
       - name: Decode GoogleService-Info.plist
         env:

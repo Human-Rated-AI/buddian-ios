@@ -10,7 +10,7 @@ final class AuthService: NSObject, ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private var currentNonce: String?
+    nonisolated(unsafe) private var currentNonce: String?
     private let sessionManager = SessionManager.shared
 
     var isAuthenticated: Bool {

@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build:
     name: Build & Verify
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 20
 
     steps:
@@ -64,6 +64,7 @@ jobs:
 
       - name: Resolve SPM packages
         run: |
+          set -o pipefail
           xcodebuild -resolvePackageDependencies \
             -project Buddian.xcodeproj \
             -scheme Buddian \
@@ -71,6 +72,7 @@ jobs:
 
       - name: Build (Debug, iOS Simulator)
         run: |
+          set -o pipefail
           xcodebuild build \
             -project Buddian.xcodeproj \
             -scheme Buddian \
@@ -82,8 +84,9 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty
 
-      - name: Check for Swift warnings (analyzer)
+      - name: Swift static analyzer
         run: |
+          set -o pipefail
           xcodebuild build \
             -project Buddian.xcodeproj \
             -scheme Buddian \

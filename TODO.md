@@ -18,7 +18,7 @@
 - [x] Add Firebase iOS SDK via Swift Package Manager
 - [x] Add `GoogleService-Info.plist` (Firebase config, safe for public repo)
 - [x] Implement Sign in with Apple (`AuthenticationServices`)
-- [ ] Implement Google Sign In (`GoogleSignIn` framework)
+- [ ] Implement Google Sign In (`GoogleSignIn` framework) — deferred, repo inaccessible
 - [x] Exchange Firebase ID token for Buddian session via `POST /web/auth/firebase`
 - [x] Store session token in Keychain
 - [x] Handle auth state: logged in → show app, logged out → show login screen

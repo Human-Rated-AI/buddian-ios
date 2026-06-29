@@ -10,8 +10,8 @@ final class AuthService: NSObject, ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private var currentNonce: String?
-    private var authController: ASAuthorizationController?
+    nonisolated(unsafe) private var currentNonce: String?
+    nonisolated(unsafe) private var authController: ASAuthorizationController?
     private let sessionManager = SessionManager.shared
 
     var isAuthenticated: Bool {
@@ -175,11 +175,13 @@ extension AuthService: ASAuthorizationControllerDelegate {
 extension AuthService: ASAuthorizationControllerPresentationContextProviding {
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         NSLog("[Auth] presentationAnchor requested")
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = scene.windows.first else {
-            fatalError("No window for Apple Sign In")
+        MainActor.assumeIsolated {
+            guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = scene.windows.first else {
+                fatalError("No window for Apple Sign In")
+            }
+            return window
         }
-        return window
     }
 }
 

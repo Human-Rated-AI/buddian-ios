@@ -6,7 +6,7 @@ Buddian is a coined name from "buddy" and "guardian": a helpful AI companion who
 
 ## Status
 
-**MVP (v1)**: Simple image/video generation via vast.ai. No confidential workflow yet. The App Store app is a private host app; this repository contains the auditable user client core.
+**MVP (v1)**: Simple image/video generation via vast.ai. No confidential workflow yet. The App Store app is a private host app; this repository contains the auditable user client core. Users select a model, pay via Apple IAP, submit prompts, and view/download results. All generation runs on standard (non-encrypted) GPU compute.
 
 **v2+**: Confidential inference via Phala TEE, custom model deployment, Hugging Face catalog, proof bundles.
 
@@ -29,7 +29,7 @@ The production service is at https://buddian.com (API: https://api.buddian.com).
 - **Async processing**: User submits request, closes app, gets notification when ready, comes back to view results.
 - **GPU lifecycle**: GPU allocated only when batch starts. Idle timeout (30s no activity) shuts down GPU. User pays only for GPU usage time.
 - **Pricing**: Must cover Apple's 30% commission + payment processing. Target: match or beat vast.ai's listed prices.
-- **Two inference tiers**: "Confidential" (Phala TEE, premium) and "Standard" (vast.ai, cheaper).
+- **Competitive pricing**: 2X markup on raw GPU cost undercuts existing services while generating revenue to fund the future encrypted tier.
 
 ### Future Features (v2+)
 
@@ -45,39 +45,41 @@ The app should feel like a native Apple productivity app: quiet, fast, clear, an
 
 Two primary workflows:
 
-1. **Real-time inference**: Send a single prompt, get an immediate response.
-2. **Batch generation**: Upload multiple prompts, select a model, pay upfront, process in secure GPU session.
+1. **Image generation**: Select model (FLUX, SDXL, SD3), enter prompt, generate image, download.
+2. **Video generation**: Select model (Seedance 2, Mochi 1, Ray 2 Flash, Wan 2.1), enter prompt, generate video, download.
 
-Inference tiers:
-
-- **Confidential (Phala TEE)**: Encrypted prompts, GPU TEE attestation. Premium pricing.
-- **Standard (vast.ai)**: Raw GPU compute, no TEE. Lower pricing.
+**MVP scope:** Standard-tier generation only (non-encrypted, via vast.ai). Confidential inference is v2+.
 
 ## Navigation
 
 Bottom `TabView` with five tabs:
 
-1. **Ask** — Run inference with tier selector (Confidential/Standard), model selection, prompt composer, cost preview, encrypted results, proof download.
-2. **Models** — Browse installed models, discover open-source models, deploy to secure GPUs, stop billing, remove deployments.
-3. **Library** — Local-first history: chats, images, audio/video, files. Export via iOS share sheet. Server-side encrypted media remains unusable without local key.
-4. **Wallet** — Balance, transaction history, "Add Funds" (StoreKit), "Buy Batch Credits" (Apple IAP), spending breakdown, batch credit balance.
+**MVP tabs:**
+
+1. **Generate** — Select model, enter prompt, see pricing per image/second, submit generation job, view results, download.
+2. **Models** — Browse available generation models (image/video), see pricing, filter by type.
+3. **Library** — Job history: past generations, images, videos. Re-download results.
+4. **Wallet** — Balance, transaction history, "Add Funds" (StoreKit), spending breakdown.
+
+**v2+ tabs:**
+
 5. **Shield** — Privacy verification: attestation/proof state, local key state, source/release verification, proof bundle export, endpoint settings.
 
-Lock indicator in nav bar: green (attestation passed), gray (no session), yellow (proof warning), red (proof failure).
+## Batch Generation (v2+ Feature)
 
-## Batch Generation (Tab 1B)
+The MVP uses simple per-generation pricing. Batch generation with GPU time packages is a v2+ feature.
 
-### GPU Availability
+### GPU Availability (v2+)
 
 - GPU up (shared session): buy any increment (1hr, 3hr, 6hr).
 - GPU down: must buy 24hr minimum ($39.99).
 
-### Batch Job Lifecycle
+### Batch Job Lifecycle (v2+)
 
-1. Queued → prompts encrypted and queued
+1. Queued → prompts queued for processing
 2. Provisioning → GPU allocated
-3. Running → inference in encrypted batches, progress X/Y
-4. Completed → results encrypted, decrypted on device only
+3. Running → inference in batches, progress X/Y
+4. Completed → results available for download
 5. Idle → GPU stays for remaining purchased time, then shuts down
 
 ### Pricing (Apple IAP)
@@ -94,7 +96,9 @@ Lock indicator in nav bar: green (attestation passed), gray (no session), yellow
 
 Apple takes 30%. Prices include margin for Apple fees, processing, and GPU costs.
 
-## Two-Tier Inference
+## Two-Tier Inference (v2+)
+
+The MVP uses standard (non-encrypted) vast.ai only. The two-tier model is a v2+ feature.
 
 | Tier | Provider | Security | Price |
 | --- | --- | --- | --- |

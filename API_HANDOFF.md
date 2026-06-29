@@ -8,7 +8,7 @@ Requirements for backend API changes to support iOS app MVP.
 
 | Endpoint | Method | Status | Notes |
 |----------|--------|--------|-------|
-| `/models` | GET | ✅ Working | 67 models, text-only output |
+| `/models` | GET | ✅ Working | 75 models (67 text + 4 image + 4 video) |
 | `/generations` | POST | ✅ Implemented | Requires auth (401 without session) |
 | `/generations/{id}` | GET | ✅ Implemented | Requires auth |
 | `/web/me` | GET | ✅ Implemented | Requires auth |
@@ -20,7 +20,7 @@ Requirements for backend API changes to support iOS app MVP.
 
 ## 1. Model Catalog — Image/Video Models Needed
 
-**Current state:** `/models` returns 67 models, all with `output_modalities: ["text"]`.
+**Current state:** `/models` returns 75 models: 67 text-only upstream models plus 8 static image/video generation entries (SDXL, SD3, FLUX 1.1 Pro, FLUX Schnell, Stable Video Diffusion, Mochi 1, Ray 2 Flash, Wan 2.1).
 
 **Required:** Add image/video generation models with:
 ```json

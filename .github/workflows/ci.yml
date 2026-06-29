@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build:
     name: Build & Verify
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 30
 
     steps:
@@ -25,8 +25,42 @@ jobs:
           GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
         run: echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > Buddian/GoogleService-Info.plist
 
-      - name: Build
-        run: ./build.sh
+      - name: List available Xcode versions
+        run: ls /Applications/Xcode*.app 2>/dev/null || echo "No Xcode found"
+
+      - name: List available simulators
+        run: xcrun simctl list devices available
+
+      - name: Resolve SPM packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project Buddian.xcodeproj \
+            -scheme Buddian \
+            -clonedSourcePackagesDirPath .spm-packages
+
+      - name: Build for iOS Simulator
+        run: |
+          # Find first available iOS Simulator
+          DEST=$(xcrun simctl list devices available | grep "iPhone" | grep -v "unavailable" | head -1 | sed 's/.*(\(.*\)).*/\1/')
+          if [ -z "$DEST" ]; then
+            echo "No iPhone simulator available, trying any iOS device..."
+            DEST=$(xcrun simctl list devices available | grep "iOS" | grep -v "unavailable" | head -1 | sed 's/.*(\(.*\)).*/\1/')
+          fi
+          if [ -z "$DEST" ]; then
+            echo "ERROR: No iOS Simulator found"
+            xcrun simctl list devices
+            exit 1
+          fi
+          echo "Using simulator: $DEST"
+          xcodebuild build \
+            -project Buddian.xcodeproj \
+            -scheme Buddian \
+            -destination "platform=iOS Simulator,id=$DEST" \
+            -configuration Debug \
+            -clonedSourcePackagesDirPath .spm-packages \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Verify no secrets in source
         run: |

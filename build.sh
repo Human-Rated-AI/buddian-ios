@@ -6,7 +6,6 @@
 #   ./build.sh                                    # auto-detect first available simulator
 #   ./build.sh clean                              # clean + build
 #   ./build.sh "" "platform=iOS,name=iPhone 17e"  # specific device
-#   ./build.sh "" "generic/platform=iOS Simulator" # build-only, any simulator
 
 SCHEME="Buddian"
 PROJECT="Buddian.xcodeproj"
@@ -23,13 +22,14 @@ fi
 if [ "${2:-}" != "" ]; then
     DESTINATION="$2"
 else
-    DESTINATION=$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -showdestinations 2>/dev/null \
-        | grep "platform:iOS Simulator" | head -1 | sed 's/.*{ //' | sed 's/ }.*//')
-    if [ -z "$DESTINATION" ]; then
-        echo "No specific simulator found, using generic iOS Simulator destination."
-        DESTINATION="generic/platform=iOS Simulator"
-    else
+    # Use xcrun simctl for reliable detection — skips placeholders
+    DEVICE_ID=$(xcrun simctl list devices available | grep -v "unavailable" | grep "iPhone" | head -1 | sed 's/.*(\([A-F0-9-]*\)).*/\1/')
+    if [ -n "$DEVICE_ID" ]; then
+        DESTINATION="platform=iOS Simulator,id=$DEVICE_ID"
         echo "Auto-detected simulator: $DESTINATION"
+    else
+        echo "ERROR: No iOS Simulator found. Install one in Xcode > Settings > Platforms."
+        exit 1
     fi
 fi
 

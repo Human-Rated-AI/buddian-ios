@@ -10,47 +10,11 @@ PROJECT="Buddian.xcodeproj"
 DESTINATION="platform=iOS Simulator,name=iPhone 16,OS=latest"
 CONFIG="Debug"
 
-# Create stub GoogleService-Info.plist if missing (needed for CI)
+# Require GoogleService-Info.plist
 if [ ! -f Buddian/GoogleService-Info.plist ]; then
-    echo "--- Creating GoogleService-Info.plist stub ---"
-    cat > Buddian/GoogleService-Info.plist << 'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>API_KEY</key>
-	<string>CI_PLACEHOLDER</string>
-	<key>GCM_SENDER_ID</key>
-	<string>000000000000</string>
-	<key>PLIST_VERSION</key>
-	<string>1</string>
-	<key>BUNDLE_ID</key>
-	<string>com.humanratedai.Buddian</string>
-	<key>PROJECT_ID</key>
-	<string>human-rated-ai</string>
-	<key>STORAGE_BUCKET</key>
-	<string>human-rated-ai.appspot.com</string>
-	<key>IS_ADS_ENABLED</key>
-	<false/>
-	<key>IS_ANALYTICS_ENABLED</key>
-	<false/>
-	<key>IS_APPINVITE_ENABLED</key>
-	<false/>
-	<key>IS_GCM_ENABLED</key>
-	<false/>
-	<key>IS_SIGNIN_ENABLED</key>
-	<true/>
-	<key>GOOGLE_APP_ID</key>
-	<string>1:000000000000:ios:0000000000000000</string>
-	<key>CLIENT_ID</key>
-	<string>000000000000-placeholder.apps.googleusercontent.com</string>
-	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.000000000000-placeholder</string>
-</dict>
-</plist>
-PLIST
-    echo "Created stub. Replace with real file for device builds."
-    echo ""
+    echo "ERROR: Buddian/GoogleService-Info.plist not found."
+    echo "Download it from Firebase Console > Project Settings > iOS app."
+    exit 1
 fi
 
 # Clean if requested

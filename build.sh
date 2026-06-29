@@ -1,5 +1,4 @@
 #!/bin/bash
-set -euo pipefail
 
 # Buddian iOS build script
 # Usage: ./build.sh [clean] [destination]
@@ -52,9 +51,6 @@ xcodebuild -resolvePackageDependencies \
 
 echo ""
 echo "--- Building ($CONFIG) ---"
-
-# Build and capture exit code properly
-set +e
 xcodebuild build \
     -project "$PROJECT" \
     -scheme "$SCHEME" \
@@ -63,16 +59,4 @@ xcodebuild build \
     -clonedSourcePackagesDirPath .spm-packages \
     CODE_SIGN_IDENTITY="" \
     CODE_SIGNING_REQUIRED=NO \
-    CODE_SIGNING_ALLOWED=NO \
-    2>&1 | grep -E "(error:|warning:|BUILD SUCCEEDED|BUILD FAILED|note:)"
-BUILD_EXIT=${PIPESTATUS[0]}
-set -e
-
-echo ""
-if [ $BUILD_EXIT -eq 0 ]; then
-    echo -e "\033[0;32mBuild succeeded.\033[0m"
-else
-    echo -e "\033[0;31mBuild failed with exit code $BUILD_EXIT.\033[0m"
-fi
-
-exit $BUILD_EXIT
+    CODE_SIGNING_ALLOWED=NO

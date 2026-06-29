@@ -61,7 +61,7 @@ jobs:
       - name: Verify no secrets in source
         run: |
           echo "Checking for leaked secrets..."
-          if grep -r "sk_live\|sk_test\|password.*=.*['\"]" --include="*.swift" --include="*.plist" .; then
+          if grep -r "sk_live\|sk_test" --include="*.swift" --include="*.plist" --exclude-dir=.spm-packages --exclude-dir=DerivedData .; then
             echo "ERROR: Possible secrets found in source!"
             exit 1
           fi

@@ -11,6 +11,7 @@ final class AuthService: NSObject, ObservableObject {
     @Published var errorMessage: String?
 
     nonisolated(unsafe) private var currentNonce: String?
+    nonisolated(unsafe) private var authorizationController: ASAuthorizationController?
     private let sessionManager = SessionManager.shared
 
     var isAuthenticated: Bool {
@@ -36,6 +37,7 @@ final class AuthService: NSObject, ObservableObject {
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
         controller.presentationContextProvider = self
+        authorizationController = controller
         print("[Auth] Presenting Apple Sign In controller")
         controller.performRequests()
     }

@@ -2,12 +2,14 @@
 set -euo pipefail
 
 # Buddian iOS build script
-# Usage: ./build.sh [clean]
-# Requires: Xcode 16+, xcodebuild
+# Usage: ./build.sh [clean] [destination]
+# Examples:
+#   ./build.sh                          # auto-detect first available simulator
+#   ./build.sh clean                    # clean + build
+#   ./build.sh "platform=iOS,name=iPhone 17e"  # specific device
 
 SCHEME="Buddian"
 PROJECT="Buddian.xcodeproj"
-DESTINATION="platform=iOS Simulator,name=iPhone 16,OS=latest"
 CONFIG="Debug"
 
 # Require GoogleService-Info.plist
@@ -15,6 +17,21 @@ if [ ! -f Buddian/GoogleService-Info.plist ]; then
     echo "ERROR: Buddian/GoogleService-Info.plist not found."
     echo "Download it from Firebase Console > Project Settings > iOS app."
     exit 1
+fi
+
+# Destination: use arg, or auto-detect first available simulator
+if [ "${2:-}" != "" ]; then
+    DESTINATION="$2"
+elif [ "${1:-}" = "clean" ] && [ "${2:-}" != "" ]; then
+    DESTINATION="$2"
+else
+    DESTINATION=$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -showdestinations 2>/dev/null \
+        | grep "platform:iOS Simulator" | head -1 | sed 's/.*{ //' | sed 's/ }.*//')
+    if [ -z "$DESTINATION" ]; then
+        echo "ERROR: No iOS Simulator found. Install a simulator in Xcode > Settings > Platforms."
+        exit 1
+    fi
+    echo "Auto-detected simulator: $DESTINATION"
 fi
 
 # Clean if requested
@@ -36,7 +53,7 @@ xcodebuild -resolvePackageDependencies \
     -clonedSourcePackagesDirPath .spm-packages
 
 echo ""
-echo "--- Building ($CONFIG, iOS Simulator) ---"
+echo "--- Building ($CONFIG) ---"
 set -o pipefail
 xcodebuild build \
     -project "$PROJECT" \
@@ -48,7 +65,6 @@ xcodebuild build \
     CODE_SIGNING_REQUIRED=NO \
     CODE_SIGNING_ALLOWED=NO \
     2>&1 | while IFS= read -r line; do
-        # Highlight errors and warnings
         if [[ "$line" == *"error:"* ]]; then
             echo -e "\033[0;31m$line\033[0m"
         elif [[ "$line" == *"warning:"* ]]; then

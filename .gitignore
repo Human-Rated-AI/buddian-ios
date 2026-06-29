@@ -21,9 +21,10 @@ xcuserdata/
 
 # Swift Package Manager
 .build/
-Packages/
-Package.pins
-Package.resolved
+ Packages/
+ Package.pins
+ Package.resolved
+ .spm-packages/
 
 # CocoaPods
 Pods/
@@ -36,6 +37,10 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
+
+# Build logs
+build.log
+error.log
 
 # Firebase (client config, injected via CI secret)
 GoogleService-Info.plist

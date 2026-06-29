@@ -1,5 +1,6 @@
 # Xcode
 *.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/project.xcworkspace/
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 DerivedData/
@@ -21,10 +22,10 @@ xcuserdata/
 
 # Swift Package Manager
 .build/
- Packages/
- Package.pins
- Package.resolved
- .spm-packages/
+Packages/
+Package.pins
+Package.resolved
+.spm-packages/
 
 # CocoaPods
 Pods/

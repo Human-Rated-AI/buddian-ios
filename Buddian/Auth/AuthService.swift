@@ -25,7 +25,7 @@ final class AuthService: NSObject, ObservableObject {
     // MARK: - Sign in with Apple
 
     func signInWithApple() {
-        print("[Auth] signInWithApple tapped")
+        NSLog("[Auth] signInWithApple tapped")
         let nonce = randomNonceString()
         currentNonce = nonce
 
@@ -38,7 +38,7 @@ final class AuthService: NSObject, ObservableObject {
         controller.delegate = self
         controller.presentationContextProvider = self
         authorizationController = controller
-        print("[Auth] Presenting Apple Sign In controller")
+        NSLog("[Auth] Presenting Apple Sign In controller")
         controller.performRequests()
     }
 
@@ -46,7 +46,7 @@ final class AuthService: NSObject, ObservableObject {
         do {
             try Auth.auth().signOut()
         } catch {
-            print("[Auth] Firebase sign out error: \(error)")
+            NSLog("[Auth] Firebase sign out error: \(error)")
         }
         sessionManager.clearSession()
         APIClient.shared.sessionToken = nil
@@ -59,9 +59,9 @@ final class AuthService: NSObject, ObservableObject {
         errorMessage = nil
 
         do {
-            print("[Auth] Getting Firebase ID token")
+            NSLog("[Auth] Getting Firebase ID token")
             let idToken = try await firebaseUser.getIDToken()
-            print("[Auth] Got Firebase ID token, exchanging for session")
+            NSLog("[Auth] Got Firebase ID token, exchanging for session")
 
             let account = APIClient.shared
             let response: AuthResponse = try await account.post(
@@ -72,16 +72,16 @@ final class AuthService: NSObject, ObservableObject {
                 ]
             )
 
-            print("[Auth] Got session token: \(response.sessionToken.prefix(10))...")
+            NSLog("[Auth] Got session token: \(response.sessionToken.prefix(10))...")
             sessionManager.saveSession(
                 token: response.sessionToken,
                 uid: response.account.uid,
                 email: response.account.email
             )
             APIClient.shared.sessionToken = response.sessionToken
-            print("[Auth] Session saved, user authenticated")
+            NSLog("[Auth] Session saved, user authenticated")
         } catch {
-            print("[Auth] Exchange error: \(error)")
+            NSLog("[Auth] Exchange error: \(error)")
             errorMessage = error.localizedDescription
         }
 
@@ -121,25 +121,25 @@ extension AuthService: ASAuthorizationControllerDelegate {
         controller: ASAuthorizationController,
         didCompleteWithAuthorization authorization: ASAuthorization
     ) {
-        print("[Auth] Apple authorization received")
+        NSLog("[Auth] Apple authorization received")
 
         guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
-            print("[Auth] ERROR: Not an AppleID credential")
+            NSLog("[Auth] ERROR: Not an AppleID credential")
             return
         }
 
         guard let identityToken = appleIDCredential.identityToken,
               let idTokenString = String(data: identityToken, encoding: .utf8) else {
-            print("[Auth] ERROR: No identity token")
+            NSLog("[Auth] ERROR: No identity token")
             return
         }
 
         guard let nonce = currentNonce else {
-            print("[Auth] ERROR: No nonce stored")
+            NSLog("[Auth] ERROR: No nonce stored")
             return
         }
 
-        print("[Auth] Creating Firebase credential")
+        NSLog("[Auth] Creating Firebase credential")
         let credential = OAuthProvider.credential(
             providerID: AuthProviderID.apple,
             idToken: idTokenString,
@@ -150,12 +150,12 @@ extension AuthService: ASAuthorizationControllerDelegate {
         Task { @MainActor in
             isLoading = true
             do {
-                print("[Auth] Signing in to Firebase")
+                NSLog("[Auth] Signing in to Firebase")
                 let result = try await Auth.auth().signIn(with: credential)
-                print("[Auth] Firebase sign-in succeeded, user: \(result.user.uid)")
+                NSLog("[Auth] Firebase sign-in succeeded, user: \(result.user.uid)")
                 await exchangeToken(firebaseUser: result.user)
             } catch {
-                print("[Auth] Firebase sign-in error: \(error)")
+                NSLog("[Auth] Firebase sign-in error: \(error)")
                 isLoading = false
                 errorMessage = error.localizedDescription
             }
@@ -167,7 +167,7 @@ extension AuthService: ASAuthorizationControllerDelegate {
         didCompleteWithError error: Error
     ) {
         let nsError = error as NSError
-        print("[Auth] Apple authorization error: \(error) (code: \(nsError.code))")
+        NSLog("[Auth] Apple authorization error: \(error) (code: \(nsError.code))")
         Task { @MainActor in
             if nsError.code != ASAuthorizationError.canceled.rawValue {
                 errorMessage = error.localizedDescription
@@ -180,7 +180,7 @@ extension AuthService: ASAuthorizationControllerDelegate {
 
 extension AuthService: ASAuthorizationControllerPresentationContextProviding {
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        print("[Auth] presentationAnchor requested")
+        NSLog("[Auth] presentationAnchor requested")
         return MainActor.assumeIsolated {
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                   let window = windowScene.windows.first else {

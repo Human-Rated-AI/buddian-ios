@@ -1,66 +1,115 @@
-# Buddian iOS — MVP TODO
+# Buddian iOS — Remaining Work
 
-Step-by-step plan for the MVP. See [README.md](README.md) for full spec.
-See [DONE.md](DONE.md) for completed steps.
+## What's Built
 
----
+- ✅ SwiftUI scaffold with 4 tabs (Generate, Models, Library, Wallet)
+- ✅ API client: health check, fetch models, fetch account
+- ✅ Model catalog: 75 models, filter by type, pricing display
+- ✅ Model caching: loads on startup
+- ✅ Account/balance display
+- ✅ Reusable components: CardView, PrimaryButton, SectionHeader, EmptyStateView
+- ✅ Theme system with dark mode
+- ✅ Backend endpoints ready: auth, models, generations, balance
 
-## Phase 1: Scaffold ✅ (Steps 1-12)
+## MVP Tasks (v1)
 
-All scaffold steps complete. See [DONE.md](DONE.md).
+### 1. Firebase Authentication
 
----
+- [ ] Add Firebase iOS SDK via Swift Package Manager
+- [ ] Add `GoogleService-Info.plist` (Firebase config, safe for public repo)
+- [ ] Implement Sign in with Apple (`AuthenticationServices`)
+- [ ] Implement Google Sign In (`GoogleSignIn` framework)
+- [ ] Exchange Firebase ID token for Buddian session via `POST /web/auth/firebase`
+- [ ] Store session token in Keychain
+- [ ] Handle auth state: logged in → show app, logged out → show login screen
+- [ ] Auto-login on app launch if session token exists
 
-## Phase 2: Backend Integration
+### 2. Generate Tab
 
-### ~~Step 13: Fetch Models from API~~ ✅
+- [ ] Model picker: list generation models (image/video), show pricing, select one
+- [ ] Prompt input: text field with character count
+- [ ] Optional parameters: negative prompt, width, height, steps, cfg scale
+- [ ] Cost preview: show estimated cost before submission
+- [ ] Submit button → `POST /generations` → show "Job submitted" with job_id
+- [ ] Job status view: poll `GET /generations/{job_id}` every 5 seconds
+- [ ] Result view: show completed image/video, download button
+- [ ] Error handling: insufficient balance, model not available, timeout
 
-- ~~Extend `APIClient` with `/models` endpoint~~
-- ~~Create `ModelResponse` Codable struct matching backend schema~~
-- ~~Replace hardcoded `AIModel.allModels` with API-fetched data~~
-- ~~Show loading state and error handling~~
-- ~~Verify: models list shows real data from api.buddian.com~~
-- ~~Commit: fetch models from API~~
+### 3. Models Tab
 
-### Step 14: Session Management
+- [ ] List all generation models from `GET /models?output_modality=image` and `?output_modality=video`
+- [ ] Filter chips: All / Image / Video
+- [ ] Each model card: name, type badge, pricing, default parameters
+- [ ] Tap model → navigate to Generate tab with model pre-selected
 
-- Store session token in UserDefaults (after auth)
-- Add session token to API requests via Authorization header
-- Create `SessionManager` to handle token lifecycle
-- Verify: token persists across app launches
-- Commit: session management
+### 4. Library Tab
 
-### Step 15: Account & Balance
+- [ ] List past generation jobs from `GET /generations`
+- [ ] Each job card: model name, status badge, cost, date, thumbnail
+- [ ] Tap job → detail view with result preview and download
+- [ ] Pull-to-refresh
+- [ ] Empty state: "No generations yet. Start creating!"
 
-- Add `/web/me` endpoint to fetch profile, balance, transactions
-- Create `AccountResponse` and `Transaction` models
-- Update WalletView to display real balance and transactions
-- Verify: wallet shows real data when logged in
-- Commit: account and balance
+### 5. Wallet Tab
 
-### Step 16: Ask Tab — Real Inference
+- [ ] Balance display from `GET /web/me` → `user.balance.available_usd`
+- [ ] Transaction history from `GET /web/me` → `transactions[]`
+- [ ] "Add Funds" button → StoreKit product list
+- [ ] StoreKit products: Starter ($4.99), Pro ($9.99), Studio ($24.99)
+- [ ] Purchase flow: buy → verify receipt → backend credits balance
+- [ ] Balance refresh after purchase
 
-- Add `/pricing/chat-quote` endpoint for cost estimation
-- Wire Generate button to submit prompts via API
-- Show generation status in Library tab
-- Verify: submitting a prompt creates a job
-- Commit: ask tab inference
+### 6. Backend: StoreKit Verification
 
----
+- [ ] Add `POST /storekit/verify` endpoint to backend
+- [ ] Accept Apple receipt data, verify with Apple servers, credit user balance
+- [ ] This is in the `buddian` repo, not this one — coordinate with backend session
 
-## Phase 3: Polish & Ship
+### 7. Push Notifications
 
-### Step 17: Error Handling & Loading States
+- [ ] Register for remote notifications
+- [ ] Send device token to backend
+- [ ] Backend sends notification when generation job completes
+- [ ] Tap notification → open app → navigate to Library → show result
 
-- Add loading spinners for API calls
-- Show user-friendly error alerts
-- Handle network offline gracefully
-- Verify: no crashes on network errors
-- Commit: error handling
+### 8. Polish
 
-### Step 18: Final Build & TestFlight
+- [ ] Loading states for all async operations
+- [ ] Error alerts with retry
+- [ ] Pull-to-refresh on Library and Models
+- [ ] Haptic feedback on actions
+- [ ] App icon and launch screen
+- [ ] Localization (English first, then Spanish/Russian)
 
-- Full clean build
-- Archive for TestFlight
-- Verify all tabs work end-to-end
-- Commit: ready for TestFlight
+## v2+ Tasks
+
+### 9. Confidential Inference (Phala TEE)
+
+- [ ] Add Shield tab
+- [ ] Port E2EE crypto from `buddian-web` to Swift (secp256k1, HKDF, AES-GCM)
+- [ ] Tier selector: Confidential / Standard
+- [ ] Encrypted request flow: attestation → encrypt → send → decrypt → display
+- [ ] Proof bundle download and verification
+
+### 10. Batch Generation
+
+- [ ] Batch prompt upload (multiple prompts)
+- [ ] GPU time purchase via StoreKit (1hr/3hr/6hr/24hr packages)
+- [ ] Progress view: X/Y completed
+- [ ] Batch result download (ZIP)
+
+### 11. Advanced Features
+
+- [ ] Custom model deployment
+- [ ] Model catalog from Hugging Face
+- [ ] Batch job splitting across GPU sessions
+- [ ] Encrypted media storage
+
+## Verification
+
+After each milestone:
+- Build succeeds on `macos-latest` via GitHub Actions
+- No secrets or credentials in git history
+- All API calls work against production `api.buddian.com`
+- UI renders correctly on iPhone SE (smallest) and iPhone 16 Pro Max (largest)
+- Dark mode and light mode both look correct

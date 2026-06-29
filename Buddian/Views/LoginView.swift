@@ -9,9 +9,9 @@ struct LoginView: View {
             Spacer()
 
             VStack(spacing: 12) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 64))
-                    .foregroundStyle(.tint)
+                Image("AppLogo")
+                    .resizable()
+                    .frame(width: 80, height: 80)
 
                 Text("Buddian")
                     .font(.largeTitle)

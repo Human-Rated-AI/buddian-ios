@@ -55,6 +55,45 @@ final class AuthService: NSObject, ObservableObject {
         APIClient.shared.sessionToken = nil
     }
 
+    // MARK: - Handle Apple Authorization (called from SignInWithAppleButton)
+
+    func handleAppleAuthorization(_ authorization: ASAuthorization) async {
+        guard let appleCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            NSLog("[Auth] Not AppleID credential")
+            return
+        }
+        guard let identityToken = appleCredential.identityToken,
+              let tokenStr = String(data: identityToken, encoding: .utf8) else {
+            errorMessage = "Failed to get Apple identity token"
+            return
+        }
+        guard let nonce = currentNonce else {
+            errorMessage = "Missing authentication nonce"
+            return
+        }
+
+        isLoading = true
+        NSLog("[Auth] Creating Firebase credential from Apple token")
+
+        let credential = OAuthProvider.credential(
+            providerID: AuthProviderID.apple,
+            idToken: tokenStr,
+            rawNonce: nonce,
+            accessToken: nil
+        )
+
+        do {
+            NSLog("[Auth] Signing in to Firebase")
+            let result = try await Auth.auth().signIn(with: credential)
+            NSLog("[Auth] Firebase OK: \(result.user.uid)")
+            await exchangeToken(firebaseUser: result.user)
+        } catch {
+            NSLog("[Auth] Firebase error: \(error)")
+            isLoading = false
+            errorMessage = error.localizedDescription
+        }
+    }
+
     // MARK: - Token Exchange
 
     private func exchangeToken(firebaseUser: User) async {

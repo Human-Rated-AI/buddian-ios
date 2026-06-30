@@ -76,9 +76,22 @@ private struct TransactionRow: View {
             }
             Spacer()
             if let amount = transaction.amountUsd {
-                Text("$\(amount)")
-                    .fontWeight(.medium)
+                priceText(amount)
             }
+        }
+    }
+
+    private func priceText(_ amountStr: String) -> some View {
+        let amount = Double(amountStr) ?? 0
+        let main = String(format: "$%.2f", abs(amount))
+        let raw = String(format: "%.6f", abs(amount))
+        let tail = String(raw.suffix(4))
+        return HStack(spacing: 0) {
+            Text(main)
+                .fontWeight(.medium)
+            Text(tail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 }

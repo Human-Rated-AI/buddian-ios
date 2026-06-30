@@ -6,6 +6,7 @@ struct GenerateView: View {
     @State private var selectedModelID: String?
     @State private var prompt = ""
     @State private var isSubmitting = false
+    @State private var isSetUp = false
     private let preselectedModelID: String?
 
     init(preselectedModelID: String? = nil) {
@@ -23,6 +24,7 @@ struct GenerateView: View {
                     }
                     .pickerStyle(.segmented)
                     .onChange(of: isImage) { _ in
+                        guard isSetUp else { return }
                         selectedModelID = modelsForCurrentTask(allModels).first?.id
                     }
                 }
@@ -95,14 +97,15 @@ struct GenerateView: View {
 
     private func setupDefaults(_ all: [RemoteModel]) {
         if let id = preselectedModelID {
-            selectedModelID = id
-            if all.first(where: { $0.id == id })?.outputModalities.contains("video") == true {
-                isImage = false
+            if let model = all.first(where: { $0.id == id }) {
+                isImage = !model.outputModalities.contains("video")
+                selectedModelID = id
             }
         }
         if selectedModelID == nil {
             selectedModelID = modelsForCurrentTask(all).first?.id
         }
+        isSetUp = true
     }
 }
 

@@ -280,8 +280,7 @@ extension JSONDecoder {
         for component in keyPath.split(separator: ".") {
             guard let dict = current as? [String: Any],
                   let next = dict[String(component)] else {
-                throw DecodingError.keyNotFound(
-                    CodingKeys(rawValue: String(component)),
+                throw DecodingError.dataCorrupted(
                     .init(codingPath: [], debugDescription: "Key path '\(keyPath)' not found")
                 )
             }

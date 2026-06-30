@@ -54,7 +54,7 @@ class APIClient {
         }
     }
 
-    private func get<T: Decodable>(path: String) async throws -> T {
+    func get<T: Decodable>(path: String) async throws -> T {
         let url = baseURL.appendingPathComponent(path)
         var request = URLRequest(url: url)
         request.httpMethod = "GET"

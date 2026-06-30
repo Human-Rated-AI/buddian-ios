@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct ModelsView: View {
-    @State private var models: [RemoteModel] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @EnvironmentObject var modelCache: ModelCache
     @State private var selectedFilter: ModelFilter = .all
+    @State private var selectedModel: RemoteModel?
+    @State private var showGenerate = false
 
     enum ModelFilter: String, CaseIterable {
         case all = "All"
@@ -15,14 +15,10 @@ struct ModelsView: View {
 
     private var filteredModels: [RemoteModel] {
         switch selectedFilter {
-        case .all:
-            return models
-        case .text:
-            return models.filter { $0.outputModalities.contains("text") }
-        case .image:
-            return models.filter { $0.outputModalities.contains("image") }
-        case .video:
-            return models.filter { $0.outputModalities.contains("video") }
+        case .all: return modelCache.models
+        case .text: return modelCache.models.filter { $0.outputModalities.contains("text") }
+        case .image: return modelCache.models.filter { $0.outputModalities.contains("image") }
+        case .video: return modelCache.models.filter { $0.outputModalities.contains("video") }
         }
     }
 
@@ -30,14 +26,13 @@ struct ModelsView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 filterBar
-
                 Divider()
 
-                if models.isEmpty && isLoading {
+                if modelCache.models.isEmpty && modelCache.isLoading {
                     Spacer()
                     ProgressView("Loading models...")
                     Spacer()
-                } else if models.isEmpty, let error = errorMessage {
+                } else if modelCache.models.isEmpty {
                     Spacer()
                     VStack(spacing: 12) {
                         Image(systemName: "exclamationmark.triangle")
@@ -45,38 +40,30 @@ struct ModelsView: View {
                             .foregroundStyle(.orange)
                         Text("Failed to load models")
                             .font(.headline)
-                        Text(error)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
                         Button("Retry") {
-                            Task { await loadModels() }
+                            Task { await modelCache.refresh() }
                         }
                     }
-                    .padding()
-                    Spacer()
-                } else if models.isEmpty {
-                    Spacer()
-                    EmptyStateView(
-                        icon: "cpu",
-                        title: "No Models Available",
-                        message: "Check back later for available models."
-                    )
                     Spacer()
                 } else {
                     List(filteredModels) { model in
-                        RemoteModelRow(model: model)
+                        Button {
+                            selectedModel = model
+                            showGenerate = true
+                        } label: {
+                            ModelRow(model: model)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .listStyle(.plain)
                 }
             }
             .navigationTitle("Models")
-            .task {
-                await loadModels()
-            }
-            .refreshable {
-                await loadModels()
-            }
+            .background(
+                NavigationLink("", isActive: $showGenerate) {
+                    GenerateView(preselectedModelID: selectedModel?.id)
+                }.hidden()
+            )
         }
     }
 
@@ -103,20 +90,9 @@ struct ModelsView: View {
         }
         .background(Color(.systemBackground))
     }
-
-    private func loadModels() async {
-        isLoading = models.isEmpty
-        errorMessage = nil
-        do {
-            models = try await APIClient.shared.fetchModels()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-        isLoading = false
-    }
 }
 
-private struct RemoteModelRow: View {
+struct ModelRow: View {
     let model: RemoteModel
 
     var body: some View {
@@ -124,6 +100,7 @@ private struct RemoteModelRow: View {
             HStack {
                 Text(model.name)
                     .font(.headline)
+                    .foregroundStyle(.primary)
                 Spacer()
                 if model.standardTee {
                     Text("TEE")
@@ -135,6 +112,9 @@ private struct RemoteModelRow: View {
                         .foregroundStyle(.white)
                         .clipShape(Capsule())
                 }
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             Text(model.description)
                 .font(.subheadline)
@@ -162,4 +142,5 @@ private struct RemoteModelRow: View {
 
 #Preview {
     ModelsView()
+        .environmentObject(ModelCache.shared)
 }

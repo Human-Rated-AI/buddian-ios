@@ -11,8 +11,8 @@ struct RemoteModel: Codable, Identifiable {
     let standardTee: Bool
     let inputModalities: [String]
     let outputModalities: [String]
-    let contextLength: Int
-    let maxOutputLength: Int
+    let contextLength: Int?
+    let maxOutputLength: Int?
     let supportedParameters: [String]
     let providers: [String]
     let userPricing: UserPricing?

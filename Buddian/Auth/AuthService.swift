@@ -96,11 +96,11 @@ final class AuthService: NSObject, ObservableObject {
 
     // MARK: - Handle Google Authorization
 
-    func handleGoogleAuthorization(idToken: String) async {
+    func handleGoogleAuthorization(idToken: String, accessToken: String) async {
         NSLog("[Auth] Creating Firebase credential from Google token")
         isLoading = true
 
-        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: nil)
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
 
         do {
             NSLog("[Auth] Signing in to Firebase via Google")

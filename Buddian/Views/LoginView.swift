@@ -109,9 +109,10 @@ struct LoginView: View {
                 NSLog("[Login] Google: no idToken")
                 return
             }
+            let accessToken = user.accessToken.tokenString
             NSLog("[Login] Google credential OK, exchanging...")
             Task {
-                await authService.handleGoogleAuthorization(idToken: idToken)
+                await authService.handleGoogleAuthorization(idToken: idToken, accessToken: accessToken)
             }
         }
     }

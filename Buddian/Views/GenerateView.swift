@@ -13,6 +13,7 @@ struct GenerateView: View {
     }
 
     var body: some View {
+        let allModels = modelCache.models
         NavigationStack {
             Form {
                 Section("What do you want to create?") {
@@ -21,11 +22,18 @@ struct GenerateView: View {
                         Text("Video").tag(false)
                     }
                     .pickerStyle(.segmented)
-                    .onChange(of: isImage) { _ in selectFirstModel() }
+                    .onChange(of: isImage) { _ in
+                        selectedModelID = modelsForCurrentTask(allModels).first?.id
+                    }
                 }
 
                 Section("Model") {
-                    modelRows
+                    ForEach(modelsForCurrentTask(allModels)) { model in
+                        Button { selectedModelID = model.id } label: {
+                            modelLabel(model)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
 
                 Section("Prompt") {
@@ -36,72 +44,65 @@ struct GenerateView: View {
                     HStack {
                         Text("Estimated Cost")
                         Spacer()
-                        Text(costString()).fontWeight(.medium)
+                        Text(priceForSelection(allModels)).fontWeight(.medium)
                     }
                 }
 
                 Section {
-                    PrimaryButton(title: "Generate", action: {}, isDisabled: !ready())
+                    PrimaryButton(title: "Generate", action: {}, isDisabled: !isReady())
                 }
             }
             .navigationTitle("Generate")
-            .onAppear(perform: setupDefaults)
-        }
-    }
-
-    private var modelRows: some View {
-        ForEach(filteredModels()) { model in
-            Button { selectedModelID = model.id } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(model.name).foregroundStyle(.primary)
-                        if let price = model.userPricing?.displayPrice {
-                            Text(price).font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                    if selectedModelID == model.id {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.accentColor)
-                    }
-                }
-                .contentShape(Rectangle())
+            .onAppear {
+                setupDefaults(allModels)
             }
-            .buttonStyle(.plain)
         }
     }
 
-    private func filteredModels() -> [RemoteModel] {
+    private func modelsForCurrentTask(_ all: [RemoteModel]) -> [RemoteModel] {
         let mod = isImage ? "image" : "video"
-        return modelCache.models.filter { $0.outputModalities.contains(mod) }
+        return all.filter { $0.outputModalities.contains(mod) }
     }
 
-    private func selectFirstModel() {
-        selectedModelID = filteredModels().first?.id
-    }
-
-    private func setupDefaults() {
-        if let id = preselectedModelID {
-            selectedModelID = id
-            if modelCache.models.first(where: { $0.id == id })?.outputModalities.contains("video") == true {
-                isImage = false
+    private func modelLabel(_ model: RemoteModel) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.name).foregroundStyle(.primary)
+                if let price = model.userPricing?.displayPrice {
+                    Text(price).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            if selectedModelID == model.id {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.accentColor)
             }
         }
-        if selectedModelID == nil {
-            selectFirstModel()
-        }
+        .contentShape(Rectangle())
     }
 
-    private func ready() -> Bool {
-        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModelID != nil && !isSubmitting
-    }
-
-    private func costString() -> String {
-        guard let m = filteredModels().first(where: { $0.id == selectedModelID }),
+    private func priceForSelection(_ all: [RemoteModel]) -> String {
+        guard let m = modelsForCurrentTask(all).first(where: { $0.id == selectedModelID }),
               let p = m.userPricing else { return "N/A" }
         if let img = p.perImage { return "$\(img)/image" }
         if let sec = p.perSecond { return "$\(sec)/s" }
         return "N/A"
+    }
+
+    private func isReady() -> Bool {
+        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModelID != nil && !isSubmitting
+    }
+
+    private func setupDefaults(_ all: [RemoteModel]) {
+        if let id = preselectedModelID {
+            selectedModelID = id
+            if all.first(where: { $0.id == id })?.outputModalities.contains("video") == true {
+                isImage = false
+            }
+        }
+        if selectedModelID == nil {
+            selectedModelID = modelsForCurrentTask(all).first?.id
+        }
     }
 }
 

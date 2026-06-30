@@ -108,7 +108,7 @@ final class AuthService: NSObject, ObservableObject {
             let response: AuthResponse = try await APIClient.shared.post(
                 path: "/web/auth/firebase",
                 body: [
-                    "firebase_token": idToken,
+                    "id_token": idToken,
                     "platform": "ios",
                 ]
             )

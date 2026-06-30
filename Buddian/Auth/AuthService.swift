@@ -110,6 +110,13 @@ final class AuthService: NSObject, ObservableObject {
     private func sha256(_ input: String) -> String {
         SHA256.hash(data: Data(input.utf8)).compactMap { String(format: "%02x", $0) }.joined()
     }
+
+    /// Generate a raw nonce (hashed version for Apple) — used by SignInWithAppleButton
+    func testNonce() -> String {
+        let raw = randomNonceString()
+        currentNonce = raw
+        return sha256(raw)
+    }
 }
 
 // MARK: - ASAuthorizationControllerDelegate

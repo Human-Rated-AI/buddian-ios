@@ -1,11 +1,13 @@
 import SwiftUI
+import AuthenticationServices
 
 struct LoginView: View {
     @StateObject private var authService = AuthService.shared
     @EnvironmentObject var sessionManager: SessionManager
+    @State private var showAppleAuth = false
 
     var body: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 0) {
             Spacer()
 
             VStack(spacing: 12) {
@@ -25,37 +27,28 @@ struct LoginView: View {
             Spacer()
 
             VStack(spacing: 16) {
-                if authService.isLoading {
-                    ProgressView("Signing in...")
-                } else {
-                    Button {
-                        authService.signInWithApple()
-                    } label: {
-                        HStack {
-                            Image(systemName: "apple.logo")
-                            Text("Sign in with Apple")
-                        }
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(.primary)
-                        .foregroundStyle(.background)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                // Direct ASAuthorizationAppleIDProvider — no AuthService involved
+                SignInWithAppleButton { request in
+                    NSLog("[Login] SignInWithAppleButton.onRequest")
+                    let nonce = AuthService.shared.testNonce()
+                    request.requestedScopes = [.fullName, .email]
+                    request.nonce = nonce
+                } onCompletion: { result in
+                    NSLog("[Login] SignInWithAppleButton.onCompletion: \(result)")
+                    switch result {
+                    case .success(let authorization):
+                        NSLog("[Login] Got Apple credential")
+                    case .failure(let error):
+                        NSLog("[Login] Apple error: \(error)")
                     }
-
-                    Text("Your Apple ID is used to create your account securely.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
                 }
+                .frame(height: 50)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                if let error = authService.errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
+                Text("Your Apple ID is used to create your account securely.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 32)
 
@@ -64,7 +57,7 @@ struct LoginView: View {
         }
         .background(Color(.systemBackground))
         .onAppear {
-            NSLog("[Login] LoginView appeared, authService: \(authService)")
+            NSLog("[Login] LoginView appeared")
         }
     }
 }

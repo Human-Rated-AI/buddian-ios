@@ -43,6 +43,10 @@ struct GenerateView: View {
         return "Pricing unavailable"
     }
 
+    private var canSubmit: Bool {
+        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModelID != nil && !isSubmitting
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -105,7 +109,7 @@ struct GenerateView: View {
                 }
 
                 Section {
-                    PrimaryButton(title: "Generate", action: submitGeneration, isDisabled: prompt.trimmingCharacters(in: .whitespaces).isEmpty || selectedModelID == nil || isSubmitting)
+                    PrimaryButton(title: "Generate", action: submitGeneration, isDisabled: !canSubmit)
                 }
             }
             .navigationTitle("Generate")

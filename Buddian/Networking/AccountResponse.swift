@@ -32,7 +32,7 @@ struct AccountBalance: Codable {
     }
 }
 
-struct AccountTransaction: Codable {
+struct AccountTransaction: Codable, Identifiable {
     let id: Int
     let kind: String?
     let entryType: String?

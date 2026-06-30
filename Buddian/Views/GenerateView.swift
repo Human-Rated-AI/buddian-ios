@@ -21,18 +21,27 @@ struct GenerateView: View {
                         Text("Video").tag(false)
                     }
                     .pickerStyle(.segmented)
+                    .onChange(of: isImage) { _ in selectFirstModel() }
                 }
 
-                modelPicker
+                Section("Model") {
+                    modelRows
+                }
 
                 Section("Prompt") {
                     TextEditor(text: $prompt).frame(minHeight: 80)
                 }
 
-                costRow
+                Section {
+                    HStack {
+                        Text("Estimated Cost")
+                        Spacer()
+                        Text(costString()).fontWeight(.medium)
+                    }
+                }
 
                 Section {
-                    PrimaryButton(title: "Generate", action: {}, isDisabled: !canSubmit())
+                    PrimaryButton(title: "Generate", action: {}, isDisabled: !ready())
                 }
             }
             .navigationTitle("Generate")
@@ -40,8 +49,35 @@ struct GenerateView: View {
         }
     }
 
-    private func canSubmit() -> Bool {
-        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModelID != nil && !isSubmitting
+    private var modelRows: some View {
+        ForEach(filteredModels()) { model in
+            Button { selectedModelID = model.id } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(model.name).foregroundStyle(.primary)
+                        if let price = model.userPricing?.displayPrice {
+                            Text(price).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                    if selectedModelID == model.id {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.accentColor)
+                    }
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func filteredModels() -> [RemoteModel] {
+        let mod = isImage ? "image" : "video"
+        return modelCache.models.filter { $0.outputModalities.contains(mod) }
+    }
+
+    private func selectFirstModel() {
+        selectedModelID = filteredModels().first?.id
     }
 
     private func setupDefaults() {
@@ -52,56 +88,16 @@ struct GenerateView: View {
             }
         }
         if selectedModelID == nil {
-            pickFirst()
+            selectFirstModel()
         }
     }
 
-    private func pickFirst() {
-        let mod = isImage ? "image" : "video"
-        selectedModelID = modelCache.models
-            .first { $0.outputModalities.contains(mod) }?.id
-    }
-
-    private var modelPicker: some View {
-        Section("Model") {
-            let mod = isImage ? "image" : "video"
-            let filtered = modelCache.models.filter { $0.outputModalities.contains(mod) }
-            ForEach(filtered) { model in
-                Button { selectedModelID = model.id } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(model.name).foregroundStyle(.primary)
-                            if let price = model.userPricing?.displayPrice {
-                                Text(price).font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                        Spacer()
-                        if selectedModelID == model.id {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.accentColor)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-    }
-
-    private var costRow: some View {
-        Section {
-            HStack {
-                Text("Estimated Cost")
-                Spacer()
-                Text(costString()).fontWeight(.medium)
-            }
-        }
+    private func ready() -> Bool {
+        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModelID != nil && !isSubmitting
     }
 
     private func costString() -> String {
-        let mod = isImage ? "image" : "video"
-        let filtered = modelCache.models.filter { $0.outputModalities.contains(mod) }
-        guard let m = filtered.first(where: { $0.id == selectedModelID }),
+        guard let m = filteredModels().first(where: { $0.id == selectedModelID }),
               let p = m.userPricing else { return "N/A" }
         if let img = p.perImage { return "$\(img)/image" }
         if let sec = p.perSecond { return "$\(sec)/s" }

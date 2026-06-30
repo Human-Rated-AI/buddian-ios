@@ -8,26 +8,40 @@ struct RemoteModel: Codable, Identifiable {
     let id: String
     let name: String
     let description: String
+    let type: String?
+    let status: String?
+    let availabilityReason: String?
     let standardTee: Bool
     let inputModalities: [String]
     let outputModalities: [String]
     let contextLength: Int?
     let maxOutputLength: Int?
-    let supportedParameters: [String]
-    let providers: [String]
+    let supportedParameters: [String]?
+    let providers: [String]?
     let userPricing: UserPricing?
+    let defaultWidth: Int?
+    let defaultHeight: Int?
+    let defaultSteps: Int?
+    let defaultCfgScale: Double?
 
     enum CodingKeys: String, CodingKey {
-        case id, name, description
+        case id, name, description, type, status, providers
+        case availabilityReason = "availability_reason"
         case standardTee = "standard_tee"
         case inputModalities = "input_modalities"
         case outputModalities = "output_modalities"
         case contextLength = "context_length"
         case maxOutputLength = "max_output_length"
         case supportedParameters = "supported_parameters"
-        case providers
         case userPricing = "user_pricing"
+        case defaultWidth = "default_width"
+        case defaultHeight = "default_height"
+        case defaultSteps = "default_steps"
+        case defaultCfgScale = "default_cfg_scale"
     }
+
+    var isFree: Bool { status == "free" }
+    var isAvailable: Bool { status == "available" || status == "free" }
 }
 
 struct UserPricing: Codable {

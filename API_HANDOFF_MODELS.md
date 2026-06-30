@@ -1,175 +1,97 @@
 # Buddian iOS — Model Availability API Handoff
 
-## Goal
+## Current Implementation (Verified 2026-06-30)
 
-The iOS app needs to show models in three tiers based on user balance and model state. The backend should filter out models that cannot be used.
-
----
-
-## Proposed Response Shape
-
-```json
-GET /models?output_modality=image
-
-{
-  "models": [
-    {
-      "id": "stabilityai/stable-diffusion-xl",
-      "name": "Stable Diffusion XL",
-      "type": "image_generation",
-      "output_modalities": ["image"],
-      "status": "available",
-      "availability_reason": null,
-      "user_pricing": {
-        "currency": "USD",
-        "per_image": "0.025"
-      },
-      "default_width": 1024,
-      "default_height": 1024,
-      "default_steps": 30,
-      "default_cfg_scale": 7.5
-    }
-  ]
-}
-```
-
----
-
-## Model Status Values
-
-| Status | Meaning | iOS Display |
-|--------|---------|-------------|
-| `available` | Ready to use immediately | Full color, tappable |
-| `free` | No charge required (promotional/demo) | Green badge |
-| `pending` | Model available but needs GPU spin-up (~30-120s) | Amber badge, "Loading..." on tap |
-| `unavailable` | Cannot be used right now (GPU quota, provider down) | Grayed out, not tappable |
-| `setup_required` | User needs to configure something first (API key, acceptance) | Orange badge, tap opens setup flow |
-
-**Backend should NOT return models with status `unavailable`** — filter them out entirely.
-
----
-
-## Three-Tier Display Rules
-
-### Tier 1: Free models (user balance = $0)
-- Show `free` and `available` models
-- Green accent color
-- Label: "Free"
-
-### Tier 2: Paid models with sufficient balance
-- Show `available` models where user can afford at least 1 generation
-- Blue accent color
-- Label: price per unit
-
-### Tier 3: Paid models insufficient balance
-- Show `pending` models (GPU needs spin-up) as dimmed
-- Show `available` models user can't afford as dimmed
-- Dimmed = 50% opacity, not tappable, "Insufficient balance" tooltip
-
----
-
-## Backend Changes Needed
-
-### 1. Filter endpoint
-
-`GET /models` should accept a query parameter to filter by availability:
-
-```
-GET /models?status=available,pending&output_modality=image
-```
-
-If no `status` param, return all except `unavailable`.
-
-### 2. Add `status` field to each model
-
-The `status` is computed per-user based on:
-- GPU provider availability
-- User balance vs model cost
-- Any setup requirements
-
-### 3. Add `availability_reason` field
-
-When status is not `available`, explain why:
+`GET /models` returns all models with these fields:
 
 ```json
 {
-  "status": "pending",
-  "availability_reason": "GPU spinning up, estimated 45 seconds"
-}
-```
-
-```json
-{
-  "status": "setup_required",
-  "availability_reason": "Accept terms of service for this model"
-}
-```
-
-### 4. Add model defaults
-
-Each generation model should return default parameters:
-
-```json
-{
+  "id": "black-forest-labs/flux-schnell",
+  "name": "FLUX Schnell",
+  "type": "image_generation",
+  "status": "free",
+  "availability_reason": null,
+  "output_modalities": ["image"],
+  "user_pricing": { "currency": "USD", "per_image": "0.01" },
   "default_width": 1024,
   "default_height": 1024,
-  "default_steps": 30,
-  "default_cfg_scale": 7.5
+  "default_steps": 4,
+  "default_cfg_scale": 1.0
 }
 ```
 
-These let the Generate tab auto-fill parameters without user configuration.
+### Status logic (current)
+
+| Model type | Condition | Status |
+|------------|-----------|--------|
+| Text (`chat`) | Phala balance > $10 | `free` |
+| Text (`chat`) | Phala balance <= $10 | `available` |
+| Image | User balance = $0 | `free` |
+| Image | User balance > $0 | `available` |
+| Video | Any | `unavailable` (filtered out, not returned) |
+
+### Current model catalog
+
+**Image (4 models, all `status=free`):**
+| Model | Price | Steps | CFG Scale |
+|-------|-------|-------|-----------|
+| FLUX 1.1 Pro | $0.04/image | 28 | 3.5 |
+| FLUX Schnell | $0.01/image | 4 | 0.0 |
+| SD3 | $0.035/image | 30 | 7.0 |
+| SDXL | $0.025/image | 30 | 7.5 |
+
+**Text (67 models, `status=free`):** Phala-hosted chat models.
+
+**Video:** 0 returned (filtered out).
+
+### Filtering
+
+- `?output_modality=image` → 4 models
+- `?output_modality=video` → 0
+- `?output_modality=text` → 67 models
+- `?search=flux` → FLUX models only
+
+### Rate limiting
+
+- 60-second minimum between generations per user
+- Returns rate limit error with retry info
 
 ---
 
-## Example: Three Models With Different States
+## Proposed Changes
 
-```json
-{
-  "models": [
-    {
-      "id": "black-forest-labs/flux-schnell",
-      "name": "FLUX Schnell",
-      "type": "image_generation",
-      "status": "available",
-      "availability_reason": null,
-      "user_pricing": { "currency": "USD", "per_image": "0.003" }
-    },
-    {
-      "id": "black-forest-labs/flux-1.1-pro",
-      "name": "FLUX 1.1 Pro",
-      "type": "image_generation",
-      "status": "pending",
-      "availability_reason": "GPU allocating, ~30s",
-      "user_pricing": { "currency": "USD", "per_image": "0.04" }
-    },
-    {
-      "id": "stabilityai/stable-diffusion-xl",
-      "name": "Stable Diffusion XL",
-      "type": "image_generation",
-      "status": "available",
-      "availability_reason": null,
-      "user_pricing": { "currency": "USD", "per_image": "0.025" }
-    }
-  ]
-}
-```
+### 1. Add `pending` status for GPU spin-up
 
-For a user with $0 balance, only FLUX Schnell ($0.003/image) might show as "free" if the backend marks it as promotional. FLUX Pro and SDXL would be dimmed.
+Some models may need GPU allocation before they can serve. Return `status: "pending"` with `availability_reason: "GPU spinning up, ~30s"`.
 
-For a user with $5.00 balance, all three show as available (full color, tappable).
+**Backend:** Check if model's GPU is allocated. If not, return `pending` instead of `available`.
+
+### 2. Add `setup_required` status
+
+If a model requires user action before use (terms acceptance, API key), return `status: "setup_required"` with a reason.
+
+### 3. Ensure video models are never returned
+
+Currently video models are filtered out at the database level. Keep this behavior — no video generation until the worker is ready.
+
+### 4. Expose generation defaults
+
+Already implemented. Each generation model returns `default_width`, `default_height`, `default_steps`, `default_cfg_scale`. The iOS app uses these to pre-fill the Generate form.
 
 ---
 
-## iOS Implementation Notes
+## iOS Display Rules
 
-The iOS app will:
+| Status | Color | Behavior |
+|--------|-------|----------|
+| `free` | Green badge | Tappable, no charge |
+| `available` | Blue badge | Tappable, charges apply |
+| `pending` | Amber badge | Tappable, shows loading spinner |
+| `unavailable` | Not shown | Filtered out by backend |
+| `setup_required` | Orange badge | Tappable, opens setup flow |
 
-1. Fetch models with the new response shape
-2. Group by status for display
-3. Dim models where `status != "available"` or user can't afford
-4. Show green badge for `free`, blue for `available`, amber for `pending`
-5. On tap of `pending` model, show loading spinner and poll for status change
-6. On tap of `setup_required`, navigate to setup flow
+### Balance-based dimming (client-side)
 
-The `status` field is the single source of truth — no client-side price checking needed.
+- User balance = $0: `free` models full color, `available` models dimmed
+- User balance > $0: All models full color
+- Dimmed = 50% opacity, shows "Insufficient balance" on tap

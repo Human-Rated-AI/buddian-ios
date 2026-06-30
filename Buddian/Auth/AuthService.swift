@@ -105,41 +105,50 @@ final class AuthService: NSObject, ObservableObject {
             let idToken = try await firebaseUser.getIDToken()
             NSLog("[Auth] Got token, calling /web/auth/firebase")
 
-            // Log raw response for debugging
             let url = URL(string: "https://api.buddian.com/web/auth/firebase")!
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.setValue("application/json", forHTTPHeaderField: "Accept")
-            request.httpBody = try JSONEncoder().encode([
+            request.httpBody = try JSONSerialization.data(withJSONObject: [
                 "id_token": idToken,
                 "platform": "ios",
             ])
             let (data, response) = try await URLSession.shared.data(for: request)
-            let body = String(data: data, encoding: .utf8) ?? "nil"
-            NSLog("[Auth] Raw response (\((response as? HTTPURLResponse)?.statusCode ?? 0)): \(body)")
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            NSLog("[Auth] Response status: \(statusCode)")
 
-            let decoder = JSONDecoder()
-            let sessionToken = try decoder.decode(String.self, from: data, keyPath: "session_token")
-            NSLog("[Auth] Session token: \(sessionToken.prefix(10))...")
-
-            // Try to extract uid from various possible locations
-            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-            let uid: String
-            if let account = json?["account"] as? [String: Any], let id = account["uid"] as? String {
-                uid = id
-            } else if let id = json?["uid"] as? String {
-                uid = id
-            } else if let user = json?["user"] as? [String: Any], let id = user["uid"] as? String {
-                uid = id
-            } else {
-                uid = "unknown"
+            guard (200...299).contains(statusCode) else {
+                let body = String(data: data, encoding: .utf8) ?? "?"
+                throw NSError(domain: "auth", code: statusCode, userInfo: [NSLocalizedDescriptionKey: body])
             }
 
-            let email = (json?["account"] as? [String: Any])?["email"] as? String
-                ?? json?["email"] as? String
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                throw NSError(domain: "auth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON"])
+            }
 
-            NSLog("[Auth] Session obtained for uid: \(uid)")
+            guard let sessionToken = json["session_token"] as? String else {
+                throw NSError(domain: "auth", code: -2, userInfo: [NSLocalizedDescriptionKey: "Missing session_token"])
+            }
+
+            // uid: account.user.id (number) or account.user_id or root user_id
+            var uid = ""
+            if let account = json["account"] as? [String: Any],
+               let user = account["user"] as? [String: Any],
+               let id = user["id"] {
+                uid = "\(id)"
+            }
+            if uid.isEmpty, let id = json["user_id"] {
+                uid = "\(id)"
+            }
+
+            var email: String?
+            if let account = json["account"] as? [String: Any],
+               let user = account["user"] as? [String: Any] {
+                email = user["email"] as? String
+            }
+
+            NSLog("[Auth] Session obtained, uid: \(uid), email: \(email ?? "nil")")
             sessionManager.saveSession(token: sessionToken, uid: uid, email: email)
             APIClient.shared.sessionToken = sessionToken
         } catch {
@@ -269,24 +278,4 @@ struct AuthResponse: Codable {
 struct AuthAccount: Codable {
     let uid: String
     let email: String?
-}
-
-// MARK: - JSONDecoder keyPath helper
-
-extension JSONDecoder {
-    func decode<T>(_ type: T.Type, from data: Data, keyPath: String) throws -> T where T: Decodable {
-        let topLevel = try JSONSerialization.jsonObject(with: data)
-        var current: Any = topLevel
-        for component in keyPath.split(separator: ".") {
-            guard let dict = current as? [String: Any],
-                  let next = dict[String(component)] else {
-                throw DecodingError.dataCorrupted(
-                    .init(codingPath: [], debugDescription: "Key path '\(keyPath)' not found")
-                )
-            }
-            current = next
-        }
-        let nestedData = try JSONSerialization.data(withJSONObject: current)
-        return try decode(type, from: nestedData)
-    }
 }

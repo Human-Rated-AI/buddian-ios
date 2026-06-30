@@ -75,7 +75,7 @@ struct GenerateView: View {
             Spacer()
             if selectedModelID == model.id {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.accentColor)
+                    .foregroundStyle(Color.accentColor)
             }
         }
         .contentShape(Rectangle())

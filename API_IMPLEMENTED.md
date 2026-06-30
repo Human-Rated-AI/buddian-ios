@@ -28,56 +28,73 @@ All models now return a `status` field per the iOS API_HANDOFF_MODELS.md spec.
 |------------|-----------|--------|
 | Text (`chat`) | Phala balance > $10 | `free` |
 | Text (`chat`) | Phala balance <= $10 | `available` |
-| Image | User balance = $0 | `free` |
-| Image | User balance > $0 | `available` |
+| Image | Any balance | `free` (Gemini generates for free) |
 | Video | Any | `unavailable` (filtered out) |
 
-- Phala balance is checked live from Phala Cloud API (currently $20)
-- Floor is $10 — text models are free while balance exceeds floor
-- Video models are excluded entirely (no free video generation yet)
-- `availability_reason` is `null` for all current models
+- Phala balance checked live from Phala Cloud API (currently $20, floor $10)
+- Video models excluded entirely (no free video generation yet)
 
-### Generation model defaults
+### Image generation models (tested and working)
 
-Each generation model includes auto-fill parameters:
+| Model | Price | Gemini model | Status |
+|-------|-------|-------------|--------|
+| black-forest-labs/flux-schnell | $0.01/image | gemini-3-pro-image | ✅ Works |
+| black-forest-labs/flux-1.1-pro | $0.04/image | gemini-3-pro-image | ✅ Works |
+| stabilityai/stable-diffusion-xl | $0.025/image | gemini-3-pro-image | ✅ Works |
+| stabilityai/stable-diffusion-3 | $0.035/image | gemini-3-pro-image | ✅ Works |
 
-| Model | width | height | steps | cfg_scale |
-|-------|-------|--------|-------|-----------|
-| SDXL | 1024 | 1024 | 30 | 7.5 |
-| SD3 | 1024 | 1024 | 30 | 7.0 |
-| FLUX 1.1 Pro | 1024 | 1024 | 28 | 3.5 |
-| FLUX Schnell | 1024 | 1024 | 4 | 0.0 |
+### Text generation models (tested)
 
-### Available models
+3 Phala models confirmed working:
 
-**Image (status=free):**
-- black-forest-labs/flux-schnell ($0.01/image)
-- black-forest-labs/flux-1.1-pro ($0.04/image)
-- stabilityai/stable-diffusion-xl ($0.025/image)
-- stabilityai/stable-diffusion-3 ($0.035/image)
+```bash
+# Gemma 4 26B (uncensored)
+TOKEN=$(curl -s -X POST https://api.buddian.com/web/auth/test \
+  -H "Content-Type: application/json" \
+  -d '{"email":"your@email.com","secret":"YOUR_SECRET"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['session_token'])")
 
-**Text (status=free):** 67 Phala models (gemma, llama, qwen, etc.)
+curl -s -X POST "https://api.buddian.com/generations" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"model_id":"phala/gemma-4-26b-a4b-uncensored","prompt":"What is 2+2?"}'
 
-**Video:** Filtered out (status=unavailable, not returned)
+# Gemma 4 31B
+curl -s -X POST "https://api.buddian.com/generations" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"model_id":"phala/gemma-4-31b-it","prompt":"Explain quantum computing in one sentence"}'
 
-### Filtering
+# Qwen 3.6 35B
+curl -s -X POST "https://api.buddian.com/generations" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"model_id":"phala/qwen3.6-35b-a3b-uncensored","prompt":"Write a haiku about programming"}'
+```
 
-- `?output_modality=image` → 4 image models
-- `?output_modality=video` → 0 (filtered out)
-- `?output_modality=text` → 67 text models
-- `?search=flux` → FLUX models only
-- All filters work with `status` field
+### Image generation (tested, working)
 
-### Mock mode rate limiting
+```bash
+# FLUX Schnell (fast, ~$0.01/image)
+curl -s -X POST "https://api.buddian.com/generations" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"model_id":"black-forest-labs/flux-schnell","prompt":"A red cat sitting on a blue chair"}'
+# Returns: job_id, status, estimated_seconds, cost_estimate
+
+# Poll until complete
+curl -s "https://api.buddian.com/generations/$JOB_ID" \
+  -H "Authorization: Bearer $TOKEN"
+# Returns: status, result_url (/storage/generations/{user_id}/{job_id}.png)
+
+# Download result
+curl -o result.png "https://buddian.com/storage/generations/{user_id}/{job_id}.png"
+```
+
+### Rate limiting
 
 - 60-second minimum between generations per user
-- Returns "rate limited" error with retry info
-- Applies to Gemini mock image generation
+- Returns `status: "failed"`, `status_detail: "Rate limited. Wait Xs..."`
 
-## How to use from iOS
+### Free text generation
 
-1. Call `GET /models?output_modality=image` to get image models
-2. Check `status` field: `free` = no charge needed, `available` = costs money
-3. For `free` models: submit generation without balance check
-4. For `available` models: check `user_pricing.per_image` against user balance
-5. Use `default_width`, `default_height`, `default_steps`, `default_cfg_scale` to pre-fill the generate form
+Text models are free while Phala balance > $10 (currently $20). No balance deduction for text generation.

@@ -32,6 +32,7 @@
 		A10001000000000000000018 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000200000000000000001A; };
 		A10001000000000000000019 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000001; };
 		A1000100000000000000001A /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000002; };
+		A1000100000000000000001C /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000004; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -70,6 +71,7 @@
 			files = (
 				A10001000000000000000019 /* FirebaseAuth in Frameworks */,
 				A1000100000000000000001A /* FirebaseCore in Frameworks */,
+				A1000100000000000000001C /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -183,6 +185,7 @@
 			packageProductDependencies = (
 				A1000B000000000000000001 /* FirebaseAuth */,
 				A1000B000000000000000002 /* FirebaseCore */,
+				A1000B000000000000000004 /* GoogleSignIn */,
 			);
 			productName = Buddian;
 			productReference = A10002000000000000000010 /* Buddian.app */;
@@ -214,6 +217,7 @@
 			mainGroup = A10004000000000000000001;
 			packageReferences = (
 				A1000A000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A1000A000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			productRefGroup = A10004000000000000000003 /* Products */;
 			projectDirPath = "";
@@ -475,6 +479,14 @@
 				minimumVersion = 11.0.0;
 			};
 		};
+		A1000A000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -487,6 +499,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1000A000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		A1000B000000000000000004 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000A000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

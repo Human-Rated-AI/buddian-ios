@@ -94,6 +94,26 @@ final class AuthService: NSObject, ObservableObject {
         }
     }
 
+    // MARK: - Handle Google Authorization
+
+    func handleGoogleAuthorization(idToken: String) async {
+        NSLog("[Auth] Creating Firebase credential from Google token")
+        isLoading = true
+
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: nil)
+
+        do {
+            NSLog("[Auth] Signing in to Firebase via Google")
+            let result = try await Auth.auth().signIn(with: credential)
+            NSLog("[Auth] Firebase OK: \(result.user.uid)")
+            await exchangeToken(firebaseUser: result.user)
+        } catch {
+            NSLog("[Auth] Firebase Google error: \(error)")
+            isLoading = false
+            errorMessage = error.localizedDescription
+        }
+    }
+
     // MARK: - Token Exchange
 
     private func exchangeToken(firebaseUser: User) async {

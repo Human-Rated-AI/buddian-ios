@@ -80,10 +80,10 @@ struct GenerationRow: View {
                     Text(generation.modelId.split(separator: "/").last.map(String.init) ?? generation.modelId)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    if let cost = generation.costActual, cost > 0 {
+                    if generation.costActual > 0 {
                         Text("·")
                             .foregroundStyle(.secondary)
-                        Text(String(format: "$%.4f", cost))
+                        Text(String(format: "$%.4f", generation.costActual))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

@@ -51,7 +51,7 @@ struct GenerateView: View {
                 }
 
                 Section {
-                    PrimaryButton(title: "Generate", action: {}, isDisabled: !isReady())
+                    PrimaryButton(title: "Generate", action: submitGeneration, isDisabled: !isReady())
                 }
             }
             .navigationTitle("Generate")
@@ -106,6 +106,32 @@ struct GenerateView: View {
             selectedModelID = modelsForCurrentTask(all).first?.id
         }
         isSetUp = true
+    }
+
+    private func submitGeneration() {
+        guard let modelID = selectedModelID else { return }
+        isSubmitting = true
+        Task {
+            do {
+                let model = modelCache.models.first(where: { $0.id == modelID })
+                let request = APIClient.GenerationSubmitRequest(
+                    modelId: modelID,
+                    prompt: prompt,
+                    negativePrompt: nil,
+                    width: model?.defaultWidth,
+                    height: model?.defaultHeight,
+                    steps: model?.defaultSteps,
+                    cfgScale: model?.defaultCfgScale,
+                    numImages: 1
+                )
+                let response = try await APIClient.shared.submitGeneration(request)
+                NSLog("[Generate] Job submitted: \(response.jobId), status: \(response.status)")
+                prompt = ""
+            } catch {
+                NSLog("[Generate] Submit failed: \(error)")
+            }
+            isSubmitting = false
+        }
     }
 }
 

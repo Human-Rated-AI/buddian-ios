@@ -57,20 +57,7 @@ struct GenerationRow: View {
 
     var body: some View {
         HStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(.quaternary)
-                .frame(width: 60, height: 60)
-                .overlay {
-                    if generation.status == "completed" {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                    } else if generation.status == "processing" || generation.status == "queued" {
-                        ProgressView()
-                    } else {
-                        Image(systemName: "photo")
-                            .foregroundStyle(.secondary)
-                    }
-                }
+            thumbnail
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(generation.prompt)
@@ -99,6 +86,48 @@ struct GenerationRow: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private var thumbnail: some View {
+        if generation.status == "completed", let url = generation.resultDownloadURL {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    placeholderIcon(systemName: "photo.badge.exclamationmark")
+                case .empty:
+                    ProgressView()
+                        .frame(width: 60, height: 60)
+                @unknown default:
+                    placeholderIcon(systemName: "photo")
+                }
+            }
+            .frame(width: 60, height: 60)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        } else {
+            placeholderIcon(
+                systemName: generation.status == "processing" || generation.status == "queued"
+                    ? "hourglass" : "photo"
+            )
+        }
+    }
+
+    private func placeholderIcon(systemName: String) -> some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(.quaternary)
+            .frame(width: 60, height: 60)
+            .overlay {
+                if generation.status == "processing" || generation.status == "queued" {
+                    ProgressView()
+                } else {
+                    Image(systemName: systemName)
+                        .foregroundStyle(.secondary)
+                }
+            }
     }
 
     private var statusColor: Color {

@@ -7,6 +7,9 @@ struct GenerateView: View {
     @State private var prompt = ""
     @State private var isSubmitting = false
     @State private var isSetUp = false
+    @State private var generatedImageData: Data?
+    @State private var generationError: String?
+    @State private var isGenerating = false
     private let preselectedModelID: String?
 
     init(preselectedModelID: String? = nil) {
@@ -26,12 +29,13 @@ struct GenerateView: View {
                     .onChange(of: isImage) { _ in
                         guard isSetUp else { return }
                         selectedModelID = modelsForCurrentTask(allModels).first?.id
+                        generatedImageData = nil
                     }
                 }
 
                 Section("Model") {
                     ForEach(modelsForCurrentTask(allModels)) { model in
-                        Button { selectedModelID = model.id } label: {
+                        Button { selectedModelID = model.id; generatedImageData = nil } label: {
                             modelLabel(model)
                         }
                         .buttonStyle(.plain)
@@ -39,7 +43,11 @@ struct GenerateView: View {
                 }
 
                 Section("Prompt") {
-                    TextEditor(text: $prompt).frame(minHeight: 80)
+                    TextEditor(text: $prompt)
+                        .frame(minHeight: 80)
+                        .onChange(of: prompt) { _ in
+                            generatedImageData = nil
+                        }
                 }
 
                 Section {
@@ -52,6 +60,37 @@ struct GenerateView: View {
 
                 Section {
                     PrimaryButton(title: "Generate", action: submitGeneration, isDisabled: !isReady())
+                }
+
+                if isGenerating {
+                    Section {
+                        HStack {
+                            ProgressView()
+                            Text("Generating...")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                if let error = generationError {
+                    Section {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle")
+                                .foregroundStyle(.orange)
+                            Text(error)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                if let imageData = generatedImageData, let uiImage = UIImage(data: imageData) {
+                    Section("Result") {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .cornerRadius(12)
+                    }
                 }
             }
             .navigationTitle("Generate")
@@ -92,7 +131,7 @@ struct GenerateView: View {
     }
 
     private func isReady() -> Bool {
-        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModelID != nil && !isSubmitting
+        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModelID != nil && !isSubmitting && !isGenerating
     }
 
     private func setupDefaults(_ all: [RemoteModel]) {
@@ -110,10 +149,46 @@ struct GenerateView: View {
 
     private func submitGeneration() {
         guard let modelID = selectedModelID else { return }
+        let model = modelCache.models.first(where: { $0.id == modelID })
+
+        if modelID.hasPrefix("pollinations/") {
+            generateViaPollinations(modelID: modelID, model: model)
+        } else {
+            generateViaQueue(modelID: modelID, model: model)
+        }
+    }
+
+    private func generateViaPollinations(modelID: String, model: RemoteModel?) {
+        let pollinationsModel = modelID.replacingOccurrences(of: "pollinations/", with: "")
+        isGenerating = true
         isSubmitting = true
+        generationError = nil
+        generatedImageData = nil
+
         Task {
             do {
-                let model = modelCache.models.first(where: { $0.id == modelID })
+                let data = try await PollinationsClient.shared.generateImage(
+                    prompt: prompt,
+                    model: pollinationsModel,
+                    width: model?.defaultWidth ?? 1024,
+                    height: model?.defaultHeight ?? 1024
+                )
+                generatedImageData = data
+                NSLog("[Generate] Pollinations image received: \(data.count) bytes")
+            } catch {
+                generationError = error.localizedDescription
+                NSLog("[Generate] Pollinations failed: \(error)")
+            }
+            isGenerating = false
+            isSubmitting = false
+        }
+    }
+
+    private func generateViaQueue(modelID: String, model: RemoteModel?) {
+        isSubmitting = true
+        generationError = nil
+        Task {
+            do {
                 let request = APIClient.GenerationSubmitRequest(
                     modelId: modelID,
                     prompt: prompt,
@@ -126,8 +201,10 @@ struct GenerateView: View {
                 )
                 let response = try await APIClient.shared.submitGeneration(request)
                 NSLog("[Generate] Job submitted: \(response.jobId), status: \(response.status)")
+                generationError = "Job queued: \(response.jobId). Check Library for results."
                 prompt = ""
             } catch {
+                generationError = error.localizedDescription
                 NSLog("[Generate] Submit failed: \(error)")
             }
             isSubmitting = false

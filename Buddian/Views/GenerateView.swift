@@ -10,6 +10,8 @@ struct GenerateView: View {
     @State private var generatedImageData: Data?
     @State private var generationError: String?
     @State private var isGenerating = false
+    @State private var submittedJobId: String?
+    @State private var jobStatus: String?
     private let preselectedModelID: String?
 
     init(preselectedModelID: String? = nil) {
@@ -69,6 +71,25 @@ struct GenerateView: View {
                             Text("Generating...")
                                 .foregroundStyle(.secondary)
                         }
+                    }
+                }
+
+                if let jobId = submittedJobId, let status = jobStatus {
+                    Section("Job Status") {
+                        HStack {
+                            Circle()
+                                .fill(status == "completed" ? .green : status == "failed" ? .red : .orange)
+                                .frame(width: 10, height: 10)
+                            Text(status.capitalized)
+                            Spacer()
+                            if status == "processing" || status == "queued" {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
+                        }
+                        Text("Job: \(jobId)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -201,14 +222,48 @@ struct GenerateView: View {
                 )
                 let response = try await APIClient.shared.submitGeneration(request)
                 NSLog("[Generate] Job submitted: \(response.jobId), status: \(response.status)")
-                generationError = "Job queued: \(response.jobId). Check Library for results."
+                submittedJobId = response.jobId
+                jobStatus = response.status
                 prompt = ""
+                isSubmitting = false
+                await pollJobStatus(jobId: response.jobId)
             } catch {
                 generationError = error.localizedDescription
                 NSLog("[Generate] Submit failed: \(error)")
+                isSubmitting = false
             }
-            isSubmitting = false
         }
+    }
+
+    private func pollJobStatus(jobId: String) async {
+        var attempts = 0
+        let maxAttempts = 120
+
+        while attempts < maxAttempts {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            attempts += 1
+
+            do {
+                let job = try await APIClient.shared.fetchGeneration(jobId: jobId)
+                jobStatus = job.status
+
+                if job.status == "completed" {
+                    NSLog("[Generate] Job \(jobId) completed")
+                    if let url = job.resultDownloadURL {
+                        let data = try await APIClient.shared.downloadResult(jobId: jobId)
+                        generatedImageData = data
+                    }
+                    return
+                } else if job.status == "failed" {
+                    NSLog("[Generate] Job \(jobId) failed")
+                    generationError = job.statusDetail ?? "Generation failed"
+                    return
+                }
+            } catch {
+                NSLog("[Generate] Poll error: \(error)")
+            }
+        }
+        generationError = "Job timed out after \(maxAttempts * 5) seconds"
     }
 }
 

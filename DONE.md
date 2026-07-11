@@ -104,3 +104,14 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Note: API currently returns text-only models (no image/video generation yet)
 - Verified: build succeeds, models load from API
 - Files: `Buddian/Networking/{ModelsResponse,AccountResponse,APIClient}.swift`, `Buddian/Views/ModelsView.swift`
+
+## Step 14: Job Polling for GPU Models ✅
+
+- Added `submittedJobId` and `jobStatus` state to GenerateView
+- After GPU job submission, polls `GET /generations/{job_id}` every 5 seconds
+- Shows real-time status with colored indicator (green/orange/red)
+- Displays job ID during processing
+- Automatically downloads result when completed
+- Times out after 10 minutes (120 attempts)
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Views/GenerateView.swift`

@@ -1,9 +1,11 @@
 import SwiftUI
+import StoreKit
 
 struct WalletView: View {
     @State private var balance: Double = 0
     @State private var transactions: [AccountTransaction] = []
     @State private var isLoading = false
+    @StateObject private var iapManager = IAPManager.shared
     @EnvironmentObject var sessionManager: SessionManager
 
     var body: some View {
@@ -24,6 +26,21 @@ struct WalletView: View {
                     .padding(.vertical, 8)
                 }
 
+                Section("Add Funds") {
+                    if iapManager.isLoading {
+                        ProgressView()
+                    } else if iapManager.products.isEmpty {
+                        Text("No products available")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(iapManager.products) { product in
+                            ProductRow(product: product) {
+                                await purchaseProduct(product)
+                            }
+                        }
+                    }
+                }
+
                 Section("Recent Transactions") {
                     if transactions.isEmpty && !isLoading {
                         Text("No transactions yet")
@@ -36,14 +53,23 @@ struct WalletView: View {
                 }
 
                 Section {
+                    Button("Restore Purchases") {
+                        Task { await iapManager.restorePurchases() }
+                    }
                     Button("Sign Out", role: .destructive) {
                         AuthService.shared.signOut()
                     }
                 }
             }
             .navigationTitle("Wallet")
-            .refreshable { await loadAccount() }
-            .task { await loadAccount() }
+            .refreshable {
+                await loadAccount()
+                await iapManager.loadProducts()
+            }
+            .task {
+                await loadAccount()
+                await iapManager.loadProducts()
+            }
         }
     }
 
@@ -57,6 +83,51 @@ struct WalletView: View {
             NSLog("[Wallet] Load error: \(error)")
         }
         isLoading = false
+    }
+
+    private func purchaseProduct(_ product: Product) async {
+        do {
+            _ = try await iapManager.purchase(product)
+            await loadAccount()
+        } catch {
+            NSLog("[Wallet] Purchase failed: \(error)")
+        }
+    }
+}
+
+private struct ProductRow: View {
+    let product: Product
+    let onPurchase: () async -> Void
+
+    @State private var isPurchasing = false
+
+    var body: some View {
+        Button {
+            Task {
+                isPurchasing = true
+                await onPurchase()
+                isPurchasing = false
+            }
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(product.displayName)
+                        .font(.headline)
+                    Text(product.description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if isPurchasing {
+                    ProgressView()
+                } else {
+                    Text(product.displayPrice)
+                        .font(.headline)
+                        .foregroundStyle(.blue)
+                }
+            }
+        }
+        .disabled(isPurchasing)
     }
 }
 

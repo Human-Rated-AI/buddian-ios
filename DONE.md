@@ -125,3 +125,14 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Tapping a generation in Library opens detail view via sheet
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Views/LibraryView.swift`
+
+## Step 16: StoreKit Integration ✅
+
+- Created `IAPManager` singleton with StoreKit 2
+- Configured 7 product IDs matching README pricing tiers
+- WalletView now shows "Add Funds" section with available products
+- Purchase flow with loading state and error handling
+- Restore purchases button
+- Balance refreshes after purchase
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/IAPManager.swift`, `Buddian/Views/WalletView.swift`

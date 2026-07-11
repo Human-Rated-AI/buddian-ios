@@ -36,6 +36,7 @@
 		A10001000000000000000019 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000001; };
 		A1000100000000000000001A /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000002; };
 		A1000100000000000000001C /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000004; };
+		A1000100000000000000001D /* IAPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000023; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +69,7 @@
 		A1000200000000000000001A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A1000200000000000000001B /* Buddian.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Buddian.entitlements; sourceTree = "<group>"; };
 		A10002000000000000000022 /* PollinationsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollinationsClient.swift; sourceTree = "<group>"; };
+		A10002000000000000000023 /* IAPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IAPManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +100,7 @@
 				A10002000000000000000001 /* BuddianApp.swift */,
 				A10002000000000000000002 /* ContentView.swift */,
 				A10002000000000000000013 /* Theme.swift */,
+				A10002000000000000000023 /* IAPManager.swift */,
 				A10004000000000000000008 /* Auth */,
 				A10004000000000000000004 /* Views */,
 				A10004000000000000000005 /* Components */,
@@ -278,6 +281,7 @@
 				A10001000000000000000015 /* AuthService.swift in Sources */,
 				A10001000000000000000016 /* SessionManager.swift in Sources */,
 				A10001000000000000000017 /* LoginView.swift in Sources */,
+				A1000100000000000000001D /* IAPManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

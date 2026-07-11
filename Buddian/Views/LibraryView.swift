@@ -4,6 +4,7 @@ struct LibraryView: View {
     @State private var generations: [Generation] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var selectedGeneration: Generation?
 
     var body: some View {
         NavigationStack {
@@ -30,13 +31,21 @@ struct LibraryView: View {
                     )
                 } else {
                     List(generations) { gen in
-                        GenerationRow(generation: gen)
+                        Button {
+                            selectedGeneration = gen
+                        } label: {
+                            GenerationRow(generation: gen)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
             .navigationTitle("Library")
             .refreshable { await loadGenerations() }
             .task { await loadGenerations() }
+            .sheet(item: $selectedGeneration) { gen in
+                GenerationDetailView(generation: gen)
+            }
         }
     }
 
@@ -49,6 +58,130 @@ struct LibraryView: View {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+}
+
+struct GenerationDetailView: View {
+    let generation: Generation
+    @State private var imageData: Data?
+    @State private var isLoadingImage = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    if let data = imageData, let uiImage = UIImage(data: data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .cornerRadius(12)
+                    } else if generation.status == "completed" {
+                        ProgressView("Loading image...")
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 60)
+                    } else {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.quaternary)
+                            .frame(height: 300)
+                            .overlay {
+                                VStack(spacing: 8) {
+                                    Image(systemName: generation.status == "processing" || generation.status == "queued" ? "hourglass" : "photo")
+                                        .font(.largeTitle)
+                                        .foregroundStyle(.secondary)
+                                    Text(generation.status.capitalized)
+                                        .font(.headline)
+                                }
+                            }
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Prompt")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(generation.prompt)
+                            .font(.body)
+                    }
+
+                    Divider()
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Model")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(generation.modelId.split(separator: "/").last.map(String.init) ?? generation.modelId)
+                                .font(.subheadline)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("Cost")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(String(format: "$%.4f", generation.costActual))
+                                .font(.subheadline)
+                        }
+                    }
+
+                    if let params = generation.parameters {
+                        Divider()
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Parameters")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            HStack {
+                                if let w = params.width, let h = params.height {
+                                    Text("\(w)×\(h)")
+                                }
+                                if let steps = params.steps {
+                                    Text("· \(steps) steps")
+                                }
+                                if let cfg = params.cfgScale {
+                                    Text("· CFG \(cfg)")
+                                }
+                            }
+                            .font(.subheadline)
+                        }
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Generation")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if let data = imageData {
+                        Button {
+                            shareImage(data: data)
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                    }
+                }
+            }
+            .task {
+                await loadImage()
+            }
+        }
+    }
+
+    private func loadImage() async {
+        guard generation.status == "completed", let url = generation.resultDownloadURL else { return }
+        isLoadingImage = true
+        do {
+            imageData = try await APIClient.shared.downloadResult(jobId: generation.jobId)
+        } catch {
+            NSLog("[Library] Failed to load image: \(error)")
+        }
+        isLoadingImage = false
+    }
+
+    private func shareImage(data: Data) {
+        guard let uiImage = UIImage(data: data) else { return }
+        let activityVC = UIActivityViewController(activityItems: [uiImage], applicationActivities: nil)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(activityVC, animated: true)
+        }
     }
 }
 

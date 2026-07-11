@@ -115,3 +115,13 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Times out after 10 minutes (120 attempts)
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Views/GenerateView.swift`
+
+## Step 15: Job Detail View ✅
+
+- Added `GenerationDetailView` with full-screen image preview
+- Shows prompt, model, cost, and generation parameters
+- Loads full-resolution image via API download
+- Share button using UIActivityViewController
+- Tapping a generation in Library opens detail view via sheet
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Views/LibraryView.swift`

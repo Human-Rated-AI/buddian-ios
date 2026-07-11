@@ -1,5 +1,51 @@
 # Buddian iOS — Remaining Work
 
+## Handoff for macOS Agent
+
+**Repo:** `Human-Rated-AI/buddian-ios` (pull latest `main`)
+**Build:** `xcodebuild -project Buddian.xcodeproj -scheme Buddian -destination 'platform=iOS Simulator,name=iPhone 16' build`
+**API:** `https://api.buddian.com` (live, deployed 2026-07-11)
+**What works now:** Model catalog (78 models, 3 free Pollinations), submit generation, list generations, async image thumbnails in Library, direct Pollinations image generation (instant, free).
+
+### Two generation paths
+
+1. **Pollinations models** (`pollinations/flux`, `pollinations/gptimage`, `pollinations/seedream`): free, instant — `PollinationsClient.swift` calls `gen.pollinations.ai` directly, no server queue. Result displayed inline in GenerateView.
+2. **GPU models** (SDXL, FLUX, etc.): paid, async — `POST /generations` queues a job, worker processes it, result saved to disk. iOS needs polling + download (not yet wired in UI).
+
+### Auth flow
+
+Apple Sign In → Firebase ID token → `POST /web/auth/firebase { id_token, platform: "ios" }` → session token stored in Keychain → `Bearer {token}` on all requests. Google Sign In deferred (repo inaccessible).
+
+### Priority next steps
+
+1. **Firebase Auth verification** — Apple Sign In is coded but needs testing on device. Google Sign In blocked.
+2. **Models tab** — filter by image/video, tap to pre-select in Generate tab. Data already in `ModelCache.models`.
+3. **Job polling** — for GPU models, poll `GET /generations/{job_id}` every 5s, show status, display result when completed.
+4. **Job detail view** — tap job in Library → full-screen image preview + download button.
+5. **Wallet tab** — balance display, StoreKit integration, purchase flow.
+
+### Key files
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `Buddian/Networking/PollinationsClient.swift` | 48 | Direct Pollinations API (free, instant) |
+| `Buddian/Views/GenerateView.swift` | 198 | Generate tab with two paths |
+| `Buddian/Views/LibraryView.swift` | 128 | History list with AsyncImage thumbnails |
+| `Buddian/Networking/APIClient.swift` | 152 | All Buddian API calls |
+| `Buddian/Networking/ModelsResponse.swift` | 77 | RemoteModel with pricing/params |
+| `Buddian/Models/Generation.swift` | 98 | Generation model with status/result |
+| `API_HANDOFF.md` | 170 | Full API contract |
+
+### Gotchas
+
+- `project.pbxproj` has been updated with `PollinationsClient.swift` — don't re-add it.
+- All UI text to stderr, machine output to stdout (project rule).
+- Backend returns `per_image` as string (e.g. `"0.04"`), not number — `UserPricing` handles this.
+- `AsyncImage` requires no auth header; `/generations/{id}/result` is unauthenticated.
+- Dark mode works via `.foregroundStyle(.primary)` / `.secondary` — use semantic colors.
+
+---
+
 ## What's Built
 
 - ✅ SwiftUI scaffold with 4 tabs (Generate, Models, Library, Wallet)

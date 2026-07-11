@@ -195,9 +195,11 @@ struct GenerateView: View {
                     height: model?.defaultHeight ?? 1024
                 )
                 generatedImageData = data
+                HapticManager.notification(.success)
                 NSLog("[Generate] Pollinations image received: \(data.count) bytes")
             } catch {
                 generationError = error.localizedDescription
+                HapticManager.notification(.error)
                 NSLog("[Generate] Pollinations failed: \(error)")
             }
             isGenerating = false
@@ -249,6 +251,7 @@ struct GenerateView: View {
 
                 if job.status == "completed" {
                     NSLog("[Generate] Job \(jobId) completed")
+                    HapticManager.notification(.success)
                     if let url = job.resultDownloadURL {
                         let data = try await APIClient.shared.downloadResult(jobId: jobId)
                         generatedImageData = data
@@ -256,6 +259,7 @@ struct GenerateView: View {
                     return
                 } else if job.status == "failed" {
                     NSLog("[Generate] Job \(jobId) failed")
+                    HapticManager.notification(.error)
                     generationError = job.statusDetail ?? "Generation failed"
                     return
                 }

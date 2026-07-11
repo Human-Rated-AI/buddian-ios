@@ -6,7 +6,10 @@ struct PrimaryButton: View {
     var isDisabled: Bool = false
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            HapticManager.impact(.medium)
+            action()
+        }) {
             Text(title)
                 .font(.headline)
                 .frame(maxWidth: .infinity)

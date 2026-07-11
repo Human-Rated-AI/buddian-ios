@@ -147,3 +147,13 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Handles notification taps (logged for future navigation)
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Networking/NotificationManager.swift`, `Buddian/BuddianApp.swift`
+
+## Step 18: Polish & Haptics ✅
+
+- Created `HapticManager` enum with impact, notification, and selection feedback
+- Added haptic feedback to PrimaryButton on tap
+- Added success haptic when generation completes (Pollinations and GPU)
+- Added error haptic when generation fails
+- All loading states and pull-to-refresh already implemented in previous steps
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Theme.swift`, `Buddian/Components/PrimaryButton.swift`, `Buddian/Views/GenerateView.swift`

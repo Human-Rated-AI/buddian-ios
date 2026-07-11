@@ -157,3 +157,15 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - All loading states and pull-to-refresh already implemented in previous steps
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Theme.swift`, `Buddian/Components/PrimaryButton.swift`, `Buddian/Views/GenerateView.swift`
+
+## Step 19: Simplify to Pollinations Direct ✅
+
+- Removed Buddian API dependency for image generation
+- App now calls Pollinations.ai directly (free, no API key needed)
+- Generate tab: fetches models from `gen.pollinations.ai/models`, generates images/videos directly
+- Models tab: shows 26 image + 12 video models from Pollinations
+- Library: stores generations locally in UserDefaults
+- Wallet: shows "Free Generation" info (no billing needed)
+- Removed authentication flow (not needed for Pollinations)
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Networking/PollinationsClient.swift`, `Buddian/Views/{GenerateView,ModelsView,LibraryView,WalletView}.swift`

@@ -1,24 +1,22 @@
 import SwiftUI
 
 struct ModelsView: View {
-    @EnvironmentObject var modelCache: ModelCache
+    @State private var models: [PollinationsModel] = []
+    @State private var isLoading = false
+    @State private var errorMessage: String?
     @State private var selectedFilter: ModelFilter = .all
-    @State private var selectedModel: RemoteModel?
-    @State private var showGenerate = false
 
     enum ModelFilter: String, CaseIterable {
         case all = "All"
-        case text = "Text"
         case image = "Image"
         case video = "Video"
     }
 
-    private var filteredModels: [RemoteModel] {
+    private var filteredModels: [PollinationsModel] {
         switch selectedFilter {
-        case .all: return modelCache.models
-        case .text: return modelCache.models.filter { $0.outputModalities.contains("text") }
-        case .image: return modelCache.models.filter { $0.outputModalities.contains("image") }
-        case .video: return modelCache.models.filter { $0.outputModalities.contains("video") }
+        case .all: return models
+        case .image: return models.filter { $0.category == "image" }
+        case .video: return models.filter { $0.category == "video" }
         }
     }
 
@@ -28,11 +26,11 @@ struct ModelsView: View {
                 filterBar
                 Divider()
 
-                if modelCache.models.isEmpty && modelCache.isLoading {
+                if models.isEmpty && isLoading {
                     Spacer()
                     ProgressView("Loading models...")
                     Spacer()
-                } else if modelCache.models.isEmpty {
+                } else if models.isEmpty, let error = errorMessage {
                     Spacer()
                     VStack(spacing: 12) {
                         Image(systemName: "exclamationmark.triangle")
@@ -40,30 +38,29 @@ struct ModelsView: View {
                             .foregroundStyle(.orange)
                         Text("Failed to load models")
                             .font(.headline)
+                        Text(error)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                         Button("Retry") {
-                            Task { await modelCache.refresh() }
+                            Task { await loadModels() }
                         }
                     }
+                    .padding()
                     Spacer()
                 } else {
                     List(filteredModels) { model in
-                        Button {
-                            selectedModel = model
-                            showGenerate = true
-                        } label: {
-                            ModelRow(model: model)
-                        }
-                        .buttonStyle(.plain)
+                        ModelRow(model: model)
                     }
                     .listStyle(.plain)
                 }
             }
             .navigationTitle("Models")
-            .background(
-                NavigationLink("", isActive: $showGenerate) {
-                    GenerateView(preselectedModelID: selectedModel?.id)
-                }.hidden()
-            )
+            .task {
+                await loadModels()
+            }
+            .refreshable {
+                await loadModels()
+            }
         }
     }
 
@@ -90,41 +87,41 @@ struct ModelsView: View {
         }
         .background(Color(.systemBackground))
     }
+
+    private func loadModels() async {
+        isLoading = models.isEmpty
+        errorMessage = nil
+        do {
+            let allModels = try await PollinationsClient.shared.fetchModels()
+            models = allModels.filter { $0.category == "image" || $0.category == "video" }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
 }
 
-struct ModelRow: View {
-    let model: RemoteModel
+private struct ModelRow: View {
+    let model: PollinationsModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(model.name)
+                Text(model.title)
                     .font(.headline)
-                    .foregroundStyle(.primary)
                 Spacer()
-                if model.standardTee {
-                    Text("TEE")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(.orange)
-                        .foregroundStyle(.white)
-                        .clipShape(Capsule())
-                }
-                Image(systemName: "chevron.right")
+                Text(model.category.capitalized)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(model.category == "image" ? Color.blue : Color.purple)
+                    .foregroundStyle(.white)
+                    .clipShape(Capsule())
             }
             Text(model.description)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-            if let price = model.userPricing?.displayPrice {
-                Text(price)
-                    .font(.caption)
-                    .foregroundStyle(.primary)
-            }
             HStack {
                 ForEach(model.outputModalities, id: \.self) { mod in
                     Text(mod)
@@ -142,5 +139,4 @@ struct ModelRow: View {
 
 #Preview {
     ModelsView()
-        .environmentObject(ModelCache.shared)
 }

@@ -12,20 +12,23 @@ Buddian is a coined name from "buddy" and "guardian": a helpful AI companion who
 
 The production service is at https://buddian.com (API: https://api.buddian.com).
 
-## What's Built (as of 2026-06-29)
+## What's Built (as of 2026-07-11)
 
 ### iOS App (this repo)
 
 - SwiftUI scaffold with 4 MVP tabs (Generate, Models, Library, Wallet)
-- API client (`APIClient.swift`) — health check, fetch models, fetch account
+- API client (`APIClient.swift`) — health check, fetch models, fetch account, submit/list generations
+- Pollinations client (`PollinationsClient.swift`) — direct free image generation, no server queue
+- Generate tab — model picker, prompt input, cost preview, direct Pollinations generation, queue submission for GPU models, inline result image display
+- Library tab — AsyncImage thumbnails for completed generations, pull-to-refresh, empty state
 - Model catalog — fetches from `/models`, filters by output modality, shows pricing
-- Model caching — loads on startup, stores in memory
+- Model caching — loads on startup, stores in memory with 1-hour TTL
 - Account/balance display from `/web/me`
 - Reusable components: CardView, PrimaryButton, SectionHeader, EmptyStateView
 - Theme system with dark mode
-- 18 Swift files, ~900 lines total
+- 19 Swift files, ~1000 lines total
 
-### Backend (buddian repo) — ready for iOS
+### Backend (buddian repo) — deployed and ready
 
 | Endpoint | Method | Auth | Status | iOS Use |
 |----------|--------|------|--------|---------|
@@ -33,31 +36,44 @@ The production service is at https://buddian.com (API: https://api.buddian.com).
 | `/web/config` | GET | None | ✅ Working | Firebase setup |
 | `/web/auth/firebase` | POST | Firebase token | ✅ Working | Login (accepts `platform: "ios"`) |
 | `/web/me` | GET | Session | ✅ Working | Balance, transactions, providerData |
-| `/models` | GET | None | ✅ Working | 75 models (67 text + 4 image + 4 video) |
-| `/generations` | POST | Session | ✅ Working | Submit generation job |
+| `/models` | GET | None | ✅ Working | 78 models (67 text + 7 image + 4 video) |
+| `/generations` | POST | Session | ✅ Working | Submit generation job (GPU models) |
 | `/generations` | GET | Session | ✅ Working | List user's generation jobs |
 | `/generations/{id}` | GET | Session | ✅ Working | Poll job status |
-| `/installable-models` | GET | Session | ✅ Working | Model sources |
-| `/installable-models/install` | POST | Session | ✅ Stub | Install model (stub response) |
+| `/generations/{id}/result` | GET | None | ✅ Working | Download result image |
 
-**Note:** `/generations` is a queue scaffold — jobs are stored but no live worker executes them yet. The backend returns `job_id`, `status: "queued"`, `cost_estimate`, `estimated_seconds`. A worker is being developed in parallel (see `buddian` repo TODO Chunk 0B).
+**Pollinations.ai models** (`pollinations/flux`, `pollinations/gptimage`, `pollinations/seedream`) are listed as free in `/models`. The iOS app calls Pollinations directly for instant results — no server queue needed.
+
+**GPU models** (SDXL, SD3, FLUX, etc.) still go through the server queue → worker pipeline.
 
 ### Backend model catalog
 
-`GET /models` returns 75 models with these fields per model:
+`GET /models` returns 78 models including 3 free Pollinations.ai models:
+
+**Pollinations.ai models (free, instant, no GPU):**
+
+```json
+{
+  "id": "pollinations/flux",
+  "name": "Flux (Pollinations)",
+  "type": "image_generation",
+  "status": "free",
+  "user_pricing": { "currency": "USD", "per_image": "0" },
+  "default_width": 1024,
+  "default_height": 1024
+}
+```
+
+Available Pollinations models: `pollinations/flux`, `pollinations/gptimage`, `pollinations/seedream`.
+
+**GPU models (paid, async queue):**
 
 ```json
 {
   "id": "black-forest-labs/flux-1.1-pro",
   "name": "FLUX 1.1 Pro",
   "type": "image_generation",
-  "output_modalities": ["image"],
-  "user_pricing": {
-    "currency": "USD",
-    "per_image": "0.04"
-  },
-  "installed": false,
-  "install_time_seconds": 150,
+  "user_pricing": { "currency": "USD", "per_image": "0.04" },
   "default_width": 1024,
   "default_height": 1024,
   "default_steps": 28,
@@ -67,7 +83,7 @@ The production service is at https://buddian.com (API: https://api.buddian.com).
 
 Filter by modality: `GET /models?output_modality=image` or `?output_modality=video`.
 
-Generation models available: SDXL, SD3, FLUX 1.1 Pro, FLUX Schnell, Stable Video Diffusion, Mochi 1, Ray 2 Flash, Wan 2.1.
+Generation models available: 3 Pollinations (free) + SDXL, SD3, FLUX 1.1 Pro, FLUX Schnell, Stable Video Diffusion, Mochi 1, Ray 2 Flash, Wan 2.1, Seedance 2.
 
 ## MVP: Simple GPU Generation
 
@@ -102,8 +118,8 @@ The app should feel like a native Apple productivity app: quiet, fast, clear, an
 
 Two primary workflows:
 
-1. **Image generation**: Select model (FLUX, SDXL, SD3), enter prompt, generate image, download.
-2. **Video generation**: Select model (Seedance 2, Mochi 1, Ray 2 Flash, Wan 2.1), enter prompt, generate video, download.
+1. **Image generation (free, instant)**: Select a Pollinations model, enter prompt, generate image instantly via direct API call, view/download. No payment required.
+2. **Image/Video generation (paid, async)**: Select a GPU model (FLUX, SDXL, etc.), pay via Apple IAP, submit prompts, GPU processes job async, get notification when ready, view/download results.
 
 **MVP scope:** Standard-tier generation only (non-encrypted, via vast.ai). Confidential inference is v2+.
 
@@ -229,11 +245,11 @@ Key points for iOS integration:
 
 1. ✅ SwiftUI scaffold + Xcode build verification
 2. ✅ API client (health, config, models, account)
-3. ✅ Model catalog with generation models (image/video)
+3. ✅ Model catalog with generation models (image/video) + Pollinations (free)
 4. ⬜ Firebase Auth (Apple + Google Sign In)
-5. ⬜ Generate tab: model selection, prompt, submit job, view results
+5. ✅ Generate tab: model selection, prompt, submit job, Pollinations instant generation, result display
 6. ⬜ Models tab: browse with filter by type
-7. ⬜ Library tab: generation history, re-download
+7. ✅ Library tab: generation history with AsyncImage thumbnails, pull-to-refresh
 8. ⬜ Wallet tab: balance, ledger, StoreKit integration
 9. ⬜ StoreKit transaction verification endpoint (backend)
 10. ⬜ Push notifications for job completion

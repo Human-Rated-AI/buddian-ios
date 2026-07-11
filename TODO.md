@@ -26,13 +26,14 @@
 
 ### 2. Generate Tab
 
-- [ ] Model picker: list generation models (image/video), show pricing, select one
-- [ ] Prompt input: text field with character count
+- [x] Model picker: list generation models (image/video), show pricing, select one
+- [x] Prompt input: text field with character count
 - [ ] Optional parameters: negative prompt, width, height, steps, cfg scale
-- [ ] Cost preview: show estimated cost before submission
-- [ ] Submit button → `POST /generations` → show "Job submitted" with job_id
+- [x] Cost preview: show estimated cost before submission
+- [x] Submit button → `POST /generations` → show "Job submitted" with job_id (for non-Pollinations models)
+- [x] Direct Pollinations generation: Pollinations models generate instantly via direct API call
 - [ ] Job status view: poll `GET /generations/{job_id}` every 5 seconds
-- [ ] Result view: show completed image/video, download button
+- [x] Result view: show completed image (Pollinations: inline, queue: via result download)
 - [ ] Error handling: insufficient balance, model not available, timeout
 
 ### 3. Models Tab
@@ -44,11 +45,11 @@
 
 ### 4. Library Tab
 
-- [ ] List past generation jobs from `GET /generations`
-- [ ] Each job card: model name, status badge, cost, date, thumbnail
+- [x] List past generation jobs from `GET /generations`
+- [x] Each job card: model name, status badge, cost, date, thumbnail (AsyncImage)
 - [ ] Tap job → detail view with result preview and download
-- [ ] Pull-to-refresh
-- [ ] Empty state: "No generations yet. Start creating!"
+- [x] Pull-to-refresh
+- [x] Empty state: "No generations yet. Start creating!"
 
 ### 5. Wallet Tab
 

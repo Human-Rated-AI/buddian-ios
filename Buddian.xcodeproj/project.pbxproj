@@ -37,6 +37,7 @@
 		A1000100000000000000001A /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000002; };
 		A1000100000000000000001C /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1000B000000000000000004; };
 		A1000100000000000000001D /* IAPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000023; };
+		A1000100000000000000001E /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000024; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -70,6 +71,7 @@
 		A1000200000000000000001B /* Buddian.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Buddian.entitlements; sourceTree = "<group>"; };
 		A10002000000000000000022 /* PollinationsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollinationsClient.swift; sourceTree = "<group>"; };
 		A10002000000000000000023 /* IAPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IAPManager.swift; sourceTree = "<group>"; };
+		A10002000000000000000024 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -156,6 +158,7 @@
 				A10002000000000000000016 /* ModelCache.swift */,
 				A10002000000000000000021 /* GenerationsResponse.swift */,
 				A10002000000000000000022 /* PollinationsClient.swift */,
+				A10002000000000000000024 /* NotificationManager.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -282,6 +285,7 @@
 				A10001000000000000000016 /* SessionManager.swift in Sources */,
 				A10001000000000000000017 /* LoginView.swift in Sources */,
 				A1000100000000000000001D /* IAPManager.swift in Sources */,
+				A1000100000000000000001E /* NotificationManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

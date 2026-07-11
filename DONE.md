@@ -136,3 +136,14 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Balance refreshes after purchase
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/IAPManager.swift`, `Buddian/Views/WalletView.swift`
+
+## Step 17: Push Notifications ✅
+
+- Created `NotificationManager` singleton for push notification handling
+- Updated `AppDelegate` to handle remote notification registration
+- Added `UNUserNotificationCenterDelegate` for foreground notifications
+- Requests permission on app launch after authentication
+- Sends device token to backend via `POST /notifications/register`
+- Handles notification taps (logged for future navigation)
+- Verified: build succeeds on iPhone 17 simulator
+- Files: `Buddian/Networking/NotificationManager.swift`, `Buddian/BuddianApp.swift`

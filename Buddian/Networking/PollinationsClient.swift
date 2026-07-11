@@ -36,6 +36,26 @@ class PollinationsClient {
 
     private let session: URLSession
     private let baseURL = "https://gen.pollinations.ai"
+    private let cacheKey = "working_pollinations_models"
+
+    static let workingModels: [PollinationsModel] = [
+        PollinationsModel(
+            name: "flux",
+            category: "image",
+            title: "FLUX",
+            description: "Fast, high-quality image generation",
+            inputModalities: ["text"],
+            outputModalities: ["image"]
+        ),
+        PollinationsModel(
+            name: "zimage",
+            category: "image",
+            title: "ZImage",
+            description: "Versatile image generation model",
+            inputModalities: ["text"],
+            outputModalities: ["image"]
+        ),
+    ]
 
     private init() {
         let config = URLSessionConfiguration.default
@@ -45,10 +65,27 @@ class PollinationsClient {
 
     func fetchModels() async throws -> [PollinationsModel] {
         guard let url = URL(string: "\(baseURL)/models") else {
-            throw PollinationsError.serviceDown
+            return Self.workingModels
         }
-        let (data, _) = try await session.data(from: url)
-        return try JSONDecoder().decode([PollinationsModel].self, from: data)
+
+        do {
+            let (data, _) = try await session.data(from: url)
+            let allModels = try JSONDecoder().decode([PollinationsModel].self, from: data)
+
+            let imageModels = allModels.filter { $0.category == "image" }
+            let workingModels = imageModels.filter { model in
+                Self.workingModels.contains { $0.name == model.name }
+            }
+
+            if !workingModels.isEmpty {
+                cacheModels(workingModels)
+                return workingModels
+            }
+
+            return Self.workingModels
+        } catch {
+            return loadCachedModels()
+        }
     }
 
     func generateImage(
@@ -82,23 +119,17 @@ class PollinationsClient {
         return data
     }
 
-    func generateVideo(
-        prompt: String,
-        model: String = "wan"
-    ) async throws -> Data {
-        let encoded = prompt.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? prompt
-        let urlString = "\(baseURL)/video/\(encoded)?model=\(model)&nologo=true"
-
-        guard let url = URL(string: urlString) else {
-            throw PollinationsError.serviceDown
+    private func cacheModels(_ models: [PollinationsModel]) {
+        if let data = try? JSONEncoder().encode(models) {
+            UserDefaults.standard.set(data, forKey: cacheKey)
         }
+    }
 
-        let (data, response) = try await session.data(from: url)
-
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-            throw PollinationsError.serviceDown
+    private func loadCachedModels() -> [PollinationsModel] {
+        guard let data = UserDefaults.standard.data(forKey: cacheKey),
+              let models = try? JSONDecoder().decode([PollinationsModel].self, from: data) else {
+            return Self.workingModels
         }
-
-        return data
+        return models.isEmpty ? Self.workingModels : models
     }
 }

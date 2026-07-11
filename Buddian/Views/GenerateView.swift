@@ -1,30 +1,25 @@
 import SwiftUI
 
 struct GenerateView: View {
-    @State private var models: [PollinationsModel] = []
-    @State private var selectedModel: PollinationsModel?
+    @State private var models: [PollinationsModel] = PollinationsClient.workingModels
+    @State private var selectedModel: PollinationsModel? = PollinationsClient.workingModels.first
     @State private var prompt = ""
     @State private var isGenerating = false
     @State private var generatedImageData: Data?
     @State private var generationError: String?
-    @State private var isLoadingModels = false
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Model") {
-                    if isLoadingModels {
-                        ProgressView("Loading models...")
-                    } else {
-                        ForEach(availableModels) { model in
-                            Button {
-                                selectedModel = model
-                                generatedImageData = nil
-                            } label: {
-                                modelLabel(model)
-                            }
-                            .buttonStyle(.plain)
+                    ForEach(models) { model in
+                        Button {
+                            selectedModel = model
+                            generatedImageData = nil
+                        } label: {
+                            modelLabel(model)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
 
@@ -73,13 +68,9 @@ struct GenerateView: View {
             }
             .navigationTitle("Generate")
             .task {
-                await loadModels()
+                await refreshModels()
             }
         }
-    }
-
-    private var availableModels: [PollinationsModel] {
-        models.filter { $0.category == "image" || $0.category == "video" }
     }
 
     private func modelLabel(_ model: PollinationsModel) -> some View {
@@ -87,9 +78,9 @@ struct GenerateView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(model.title)
                     .foregroundStyle(.primary)
-                Text(model.category.capitalized)
+                Text("Free")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.green)
             }
             Spacer()
             if selectedModel?.id == model.id {
@@ -104,17 +95,18 @@ struct GenerateView: View {
         !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModel != nil && !isGenerating
     }
 
-    private func loadModels() async {
-        isLoadingModels = true
+    private func refreshModels() async {
         do {
-            models = try await PollinationsClient.shared.fetchModels()
-            if selectedModel == nil {
-                selectedModel = availableModels.first
+            let fetched = try await PollinationsClient.shared.fetchModels()
+            if !fetched.isEmpty {
+                models = fetched
+                if selectedModel == nil {
+                    selectedModel = fetched.first
+                }
             }
         } catch {
-            NSLog("[Generate] Failed to load models: \(error)")
+            NSLog("[Generate] Using cached models: \(error)")
         }
-        isLoadingModels = false
     }
 
     private func submitGeneration() {
@@ -125,33 +117,23 @@ struct GenerateView: View {
 
         Task {
             do {
-                if model.category == "video" {
-                    let data = try await PollinationsClient.shared.generateVideo(
-                        prompt: prompt,
-                        model: model.name
-                    )
-                    generatedImageData = data
-                } else {
-                    let data = try await PollinationsClient.shared.generateImage(
-                        prompt: prompt,
-                        model: model.name,
-                        width: 1024,
-                        height: 1024
-                    )
-                    generatedImageData = data
-                }
+                let data = try await PollinationsClient.shared.generateImage(
+                    prompt: prompt,
+                    model: model.name,
+                    width: 1024,
+                    height: 1024
+                )
+                generatedImageData = data
                 HapticManager.notification(.success)
 
-                if let data = generatedImageData {
-                    let gen = LocalGeneration(
-                        prompt: prompt,
-                        modelName: model.title,
-                        imageData: data
-                    )
-                    LocalStorage.saveGeneration(gen)
-                }
+                let gen = LocalGeneration(
+                    prompt: prompt,
+                    modelName: model.title,
+                    imageData: data
+                )
+                LocalStorage.saveGeneration(gen)
 
-                NSLog("[Generate] Image received: \(generatedImageData?.count ?? 0) bytes")
+                NSLog("[Generate] Image received: \(data.count) bytes")
             } catch {
                 generationError = error.localizedDescription
                 HapticManager.notification(.error)

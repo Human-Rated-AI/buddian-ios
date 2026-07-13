@@ -17,16 +17,25 @@ The production service is at https://buddian.com (API: https://api.buddian.com).
 ### iOS App (this repo)
 
 - SwiftUI scaffold with 4 MVP tabs (Generate, Models, Library, Wallet)
-- API client (`APIClient.swift`) — health check, fetch models, fetch account, submit/list generations
-- Pollinations client (`PollinationsClient.swift`) — direct free image generation, no server queue
-- Generate tab — model picker, prompt input, cost preview, direct Pollinations generation, queue submission for GPU models, inline result image display
+- API client (`APIClient.swift`) — all calls go through `api.buddian.com` (never directly to Pollinations)
+- Generate tab — model picker, prompt input, cost preview, job submission, status polling, result image display
 - Library tab — AsyncImage thumbnails for completed generations, pull-to-refresh, empty state
 - Model catalog — fetches from `/models`, filters by output modality, shows pricing
 - Model caching — loads on startup, stores in memory with 1-hour TTL
 - Account/balance display from `/web/me`
 - Reusable components: CardView, PrimaryButton, SectionHeader, EmptyStateView
 - Theme system with dark mode
-- 19 Swift files, ~1000 lines total
+- 18 Swift files, ~950 lines total
+
+### Architecture
+
+```
+iOS App → Buddian API (auth + generation + billing)
+                ↓
+Buddian API → Pollinations.ai (server-side, sk_ key)
+```
+
+Users authorize with Buddian and pay via Apple IAP. Buddian authorizes with Pollinations and pays them. The iOS app never sees Pollinations API keys or endpoints.
 
 ### Backend (buddian repo) — deployed and ready
 
@@ -118,8 +127,8 @@ The app should feel like a native Apple productivity app: quiet, fast, clear, an
 
 Two primary workflows:
 
-1. **Image generation (free, instant)**: Select a Pollinations model, enter prompt, generate image instantly via direct API call, view/download. No payment required.
-2. **Image/Video generation (paid, async)**: Select a GPU model (FLUX, SDXL, etc.), pay via Apple IAP, submit prompts, GPU processes job async, get notification when ready, view/download results.
+1. **Free image generation**: Select a Pollinations model → enter prompt → submit → server generates via Pollinations API → download result. No payment required.
+2. **Paid GPU generation**: Select a GPU model → pay via Apple IAP → submit prompts → worker processes on GPU → get notification → view/download results.
 
 **MVP scope:** Standard-tier generation only (non-encrypted, via vast.ai). Confidential inference is v2+.
 

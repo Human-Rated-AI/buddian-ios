@@ -5,12 +5,18 @@
 **Repo:** `Human-Rated-AI/buddian-ios` (pull latest `main`)
 **Build:** `xcodebuild -project Buddian.xcodeproj -scheme Buddian -destination 'platform=iOS Simulator,name=iPhone 16' build`
 **API:** `https://api.buddian.com` (live, deployed 2026-07-11)
-**What works now:** Model catalog (78 models, 3 free Pollinations), submit generation, list generations, async image thumbnails in Library, direct Pollinations image generation (instant, free).
+**API docs:** `IOS_API.md` (complete iOS-specific API reference)
+**What works now:** Model catalog (78 models, 3 free Pollinations), submit generation via server queue, list generations, job polling, result download, async image thumbnails in Library.
 
-### Two generation paths
+### Architecture — server-only
 
-1. **Pollinations models** (`pollinations/flux`, `pollinations/gptimage`, `pollinations/seedream`): free, instant — `PollinationsClient.swift` calls `gen.pollinations.ai` directly, no server queue. Result displayed inline in GenerateView.
-2. **GPU models** (SDXL, FLUX, etc.): paid, async — `POST /generations` queues a job, worker processes it, result saved to disk. iOS needs polling + download (not yet wired in UI).
+All iOS requests go through Buddian API. The iOS app NEVER calls Pollinations directly. The server proxies to Pollinations with its own `sk_` API key. Users pay us via Apple IAP, we pay Pollinations.
+
+```
+iOS App → Buddian API (auth + generation + billing)
+                ↓
+Buddian API → Pollinations.ai (server-side)
+```
 
 ### Auth flow
 
@@ -28,21 +34,18 @@ Apple Sign In → Firebase ID token → `POST /web/auth/firebase { id_token, pla
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `Buddian/Networking/PollinationsClient.swift` | 48 | Direct Pollinations API (free, instant) |
-| `Buddian/Views/GenerateView.swift` | 198 | Generate tab with two paths |
-| `Buddian/Views/LibraryView.swift` | 128 | History list with AsyncImage thumbnails |
-| `Buddian/Networking/APIClient.swift` | 152 | All Buddian API calls |
+| `Buddian/Views/GenerateView.swift` | ~190 | Generate tab: submit, poll, result display |
+| `Buddian/Views/LibraryView.swift` | ~128 | History list with AsyncImage thumbnails |
+| `Buddian/Networking/APIClient.swift` | ~152 | All Buddian API calls (never Pollinations directly) |
 | `Buddian/Networking/ModelsResponse.swift` | 77 | RemoteModel with pricing/params |
 | `Buddian/Models/Generation.swift` | 98 | Generation model with status/result |
-| `API_HANDOFF.md` | 170 | Full API contract |
+| `IOS_API.md` | ~170 | Complete iOS API reference |
 
 ### Gotchas
 
-- `project.pbxproj` has been updated with `PollinationsClient.swift` — don't re-add it.
+- All generation goes through `POST /generations` → server queue → worker → Pollinations. No direct API calls to Pollinations from iOS.
+- `project.pbxproj` has been cleaned up — no stale file references.
 - All UI text to stderr, machine output to stdout (project rule).
-- Backend returns `per_image` as string (e.g. `"0.04"`), not number — `UserPricing` handles this.
-- `AsyncImage` requires no auth header; `/generations/{id}/result` is unauthenticated.
-- Dark mode works via `.foregroundStyle(.primary)` / `.secondary` — use semantic colors.
 
 ---
 

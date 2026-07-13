@@ -1,63 +1,82 @@
 import SwiftUI
 
 struct ModelsView: View {
-    @State private var models: [PollinationsModel] = PollinationsClient.workingModels
-    @State private var isLoading = false
+    @EnvironmentObject var modelCache: ModelCache
+    @State private var filter: ModalityFilter = .all
+
+    enum ModalityFilter: String, CaseIterable {
+        case all = "All"
+        case image = "Image"
+        case video = "Video"
+    }
 
     var body: some View {
         NavigationStack {
             Group {
-                if isLoading {
-                    Spacer()
+                if modelCache.models.isEmpty && modelCache.isLoading {
                     ProgressView("Loading models...")
-                    Spacer()
                 } else {
-                    List(models) { model in
-                        ModelRow(model: model)
+                    List {
+                        Section {
+                            Picker("Filter", selection: $filter) {
+                                ForEach(ModalityFilter.allCases, id: \.self) { f in
+                                    Text(f.rawValue).tag(f)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        }
+
+                        Section {
+                            ForEach(filteredModels) { model in
+                                ModelRow(model: model)
+                            }
+                        }
                     }
                     .listStyle(.plain)
                 }
             }
             .navigationTitle("Models")
             .task {
-                await loadModels()
+                await modelCache.refresh()
             }
             .refreshable {
-                await loadModels()
+                await modelCache.refresh()
             }
         }
     }
 
-    private func loadModels() async {
-        isLoading = models.isEmpty
-        do {
-            let fetched = try await PollinationsClient.shared.fetchModels()
-            if !fetched.isEmpty {
-                models = fetched
-            }
-        } catch {
-            NSLog("[Models] Using cached models: \(error)")
+    private var filteredModels: [RemoteModel] {
+        let all = modelCache.models.filter { $0.type == "image_generation" || $0.type == "video_generation" }
+        switch filter {
+        case .all: return all
+        case .image: return all.filter { $0.outputModalities.contains("image") }
+        case .video: return all.filter { $0.outputModalities.contains("video") }
         }
-        isLoading = false
     }
 }
 
 private struct ModelRow: View {
-    let model: PollinationsModel
+    let model: RemoteModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(model.title)
+                Text(model.name)
                     .font(.headline)
                 Spacer()
-                Text("Free")
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.green)
-                    .foregroundStyle(.white)
-                    .clipShape(Capsule())
+                if model.isFree {
+                    Text("Free")
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.green)
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
+                } else if let price = model.userPricing?.displayPrice {
+                    Text(price)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             Text(model.description)
                 .font(.subheadline)
@@ -79,5 +98,5 @@ private struct ModelRow: View {
 }
 
 #Preview {
-    ModelsView()
+    ModelsView().environmentObject(ModelCache.shared)
 }

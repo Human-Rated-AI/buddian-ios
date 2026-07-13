@@ -24,7 +24,6 @@
 		A10001000000000000000010 /* AIModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000012; };
 		A10001000000000000000020 /* Generation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000020; };
 		A10001000000000000000021 /* GenerationsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000021; };
-		A10001000000000000000022 /* PollinationsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000022; };
 		A10001000000000000000011 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000013; };
 		A10001000000000000000012 /* ModelsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000014; };
 		A10001000000000000000013 /* AccountResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000015; };
@@ -69,7 +68,6 @@
 		A10002000000000000000019 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		A1000200000000000000001A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A1000200000000000000001B /* Buddian.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Buddian.entitlements; sourceTree = "<group>"; };
-		A10002000000000000000022 /* PollinationsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollinationsClient.swift; sourceTree = "<group>"; };
 		A10002000000000000000023 /* IAPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IAPManager.swift; sourceTree = "<group>"; };
 		A10002000000000000000024 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -157,7 +155,6 @@
 				A10002000000000000000015 /* AccountResponse.swift */,
 				A10002000000000000000016 /* ModelCache.swift */,
 				A10002000000000000000021 /* GenerationsResponse.swift */,
-				A10002000000000000000022 /* PollinationsClient.swift */,
 				A10002000000000000000024 /* NotificationManager.swift */,
 			);
 			path = Networking;
@@ -280,7 +277,6 @@
 				A10001000000000000000014 /* ModelCache.swift in Sources */,
 				A10001000000000000000020 /* Generation.swift in Sources */,
 				A10001000000000000000021 /* GenerationsResponse.swift in Sources */,
-				A10001000000000000000022 /* PollinationsClient.swift in Sources */,
 				A10001000000000000000015 /* AuthService.swift in Sources */,
 				A10001000000000000000016 /* SessionManager.swift in Sources */,
 				A10001000000000000000017 /* LoginView.swift in Sources */,

@@ -2,21 +2,42 @@ import SwiftUI
 
 struct GenerateView: View {
     @EnvironmentObject var modelCache: ModelCache
+    @State private var isImage = true
     @State private var selectedModelID: String?
     @State private var prompt = ""
-    @State private var isGenerating = false
-    @State private var generatedImageData: Data?
-    @State private var generationError: String?
+    @State private var isSubmitting = false
+    @State private var isSetUp = false
+    @State private var jobId: String?
     @State private var jobStatus: String?
-    @State private var submittedJobId: String?
+    @State private var resultImageData: Data?
+    @State private var errorMessage: String?
+    @State private var isPolling = false
+    private let preselectedModelID: String?
+
+    init(preselectedModelID: String? = nil) {
+        self.preselectedModelID = preselectedModelID
+    }
 
     var body: some View {
         let allModels = modelCache.models
         NavigationStack {
             Form {
+                Section("What do you want to create?") {
+                    Picker("Task", selection: $isImage) {
+                        Text("Image").tag(true)
+                        Text("Video").tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: isImage) { _ in
+                        guard isSetUp else { return }
+                        selectedModelID = modelsForCurrentTask(allModels).first?.id
+                        resetResult()
+                    }
+                }
+
                 Section("Model") {
                     ForEach(modelsForCurrentTask(allModels)) { model in
-                        Button { selectedModelID = model.id; generatedImageData = nil } label: {
+                        Button { selectedModelID = model.id; resetResult() } label: {
                             modelLabel(model)
                         }
                         .buttonStyle(.plain)
@@ -27,7 +48,7 @@ struct GenerateView: View {
                     TextEditor(text: $prompt)
                         .frame(minHeight: 80)
                         .onChange(of: prompt) { _ in
-                            generatedImageData = nil
+                            resetResult()
                         }
                 }
 
@@ -43,36 +64,17 @@ struct GenerateView: View {
                     PrimaryButton(title: "Generate", action: submitGeneration, isDisabled: !isReady())
                 }
 
-                if isGenerating {
+                if isPolling {
                     Section {
                         HStack {
                             ProgressView()
-                            Text("Generating...")
+                            Text("Generating... (\(jobStatus ?? "queued"))")
                                 .foregroundStyle(.secondary)
                         }
                     }
                 }
 
-                if let jobId = submittedJobId, let status = jobStatus {
-                    Section("Job Status") {
-                        HStack {
-                            Circle()
-                                .fill(status == "completed" ? .green : status == "failed" ? .red : .orange)
-                                .frame(width: 10, height: 10)
-                            Text(status.capitalized)
-                            Spacer()
-                            if status == "processing" || status == "queued" {
-                                ProgressView()
-                                    .controlSize(.small)
-                            }
-                        }
-                        Text("Job: \(jobId)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                if let error = generationError {
+                if let error = errorMessage {
                     Section {
                         HStack {
                             Image(systemName: "exclamationmark.triangle")
@@ -84,7 +86,7 @@ struct GenerateView: View {
                     }
                 }
 
-                if let imageData = generatedImageData, let uiImage = UIImage(data: imageData) {
+                if let imageData = resultImageData, let uiImage = UIImage(data: imageData) {
                     Section("Result") {
                         Image(uiImage: uiImage)
                             .resizable()
@@ -101,7 +103,8 @@ struct GenerateView: View {
     }
 
     private func modelsForCurrentTask(_ all: [RemoteModel]) -> [RemoteModel] {
-        all.filter { $0.outputModalities.contains("image") || $0.outputModalities.contains("video") }
+        let mod = isImage ? "image" : "video"
+        return all.filter { $0.outputModalities.contains(mod) }
     }
 
     private func modelLabel(_ model: RemoteModel) -> some View {
@@ -122,72 +125,47 @@ struct GenerateView: View {
     }
 
     private func priceForSelection(_ all: [RemoteModel]) -> String {
-        guard let m = all.first(where: { $0.id == selectedModelID }),
+        guard let m = modelsForCurrentTask(all).first(where: { $0.id == selectedModelID }),
               let p = m.userPricing else { return "N/A" }
         if let img = p.perImage { return "$\(img)/image" }
         if let sec = p.perSecond { return "$\(sec)/s" }
-        return "Free"
+        return "N/A"
     }
 
     private func isReady() -> Bool {
-        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModelID != nil && !isGenerating
+        !prompt.trimmingCharacters(in: .whitespaces).isEmpty
+            && selectedModelID != nil
+            && !isSubmitting
+            && !isPolling
+    }
+
+    private func resetResult() {
+        jobId = nil
+        jobStatus = nil
+        resultImageData = nil
+        errorMessage = nil
     }
 
     private func setupDefaults(_ all: [RemoteModel]) {
-        let generationModels = modelsForCurrentTask(all)
-        if selectedModelID == nil {
-            selectedModelID = generationModels.first?.id
+        if let id = preselectedModelID {
+            if let model = all.first(where: { $0.id == id }) {
+                isImage = !model.outputModalities.contains("video")
+                selectedModelID = id
+            }
         }
+        if selectedModelID == nil {
+            selectedModelID = modelsForCurrentTask(all).first?.id
+        }
+        isSetUp = true
     }
 
     private func submitGeneration() {
         guard let modelID = selectedModelID else { return }
         let model = modelCache.models.first(where: { $0.id == modelID })
+        isSubmitting = true
+        errorMessage = nil
+        resultImageData = nil
 
-        if modelID.hasPrefix("pollinations/") {
-            generateViaPollinations(modelID: modelID, model: model)
-        } else {
-            generateViaQueue(modelID: modelID, model: model)
-        }
-    }
-
-    private func generateViaPollinations(modelID: String, model: RemoteModel?) {
-        let pollinationsModel = modelID.replacingOccurrences(of: "pollinations/", with: "")
-        isGenerating = true
-        generationError = nil
-        generatedImageData = nil
-
-        Task {
-            do {
-                let data = try await PollinationsClient.shared.generateImage(
-                    prompt: prompt,
-                    model: pollinationsModel,
-                    width: model?.defaultWidth ?? 1024,
-                    height: model?.defaultHeight ?? 1024
-                )
-                generatedImageData = data
-                HapticManager.notification(.success)
-
-                let gen = LocalGeneration(
-                    prompt: prompt,
-                    modelName: model?.name ?? modelID,
-                    imageData: data
-                )
-                LocalStorage.saveGeneration(gen)
-
-                NSLog("[Generate] Pollinations image received: \(data.count) bytes")
-            } catch {
-                generationError = error.localizedDescription
-                HapticManager.notification(.error)
-                NSLog("[Generate] Pollinations failed: \(error)")
-            }
-            isGenerating = false
-        }
-    }
-
-    private func generateViaQueue(modelID: String, model: RemoteModel?) {
-        isGenerating = true
-        generationError = nil
         Task {
             do {
                 let request = APIClient.GenerationSubmitRequest(
@@ -201,58 +179,54 @@ struct GenerateView: View {
                     numImages: 1
                 )
                 let response = try await APIClient.shared.submitGeneration(request)
+                jobId = response.jobId
                 NSLog("[Generate] Job submitted: \(response.jobId), status: \(response.status)")
-                submittedJobId = response.jobId
-                jobStatus = response.status
                 prompt = ""
-                isGenerating = false
                 await pollJobStatus(jobId: response.jobId)
             } catch {
-                generationError = error.localizedDescription
+                errorMessage = error.localizedDescription
                 NSLog("[Generate] Submit failed: \(error)")
-                isGenerating = false
             }
+            isSubmitting = false
         }
     }
 
     private func pollJobStatus(jobId: String) async {
-        var attempts = 0
+        isPolling = true
+        defer { isPolling = false }
+
         let maxAttempts = 120
-
-        while attempts < maxAttempts {
-            try? await Task.sleep(nanoseconds: 5_000_000_000)
-            attempts += 1
-
+        for _ in 0..<maxAttempts {
             do {
-                let job = try await APIClient.shared.fetchGeneration(jobId: jobId)
-                jobStatus = job.status
+                let gen = try await APIClient.shared.fetchGeneration(jobId: jobId)
+                jobStatus = gen.status
 
-                if job.status == "completed" {
-                    NSLog("[Generate] Job \(jobId) completed")
-                    HapticManager.notification(.success)
-                    if let url = job.resultDownloadURL {
-                        let data = try await APIClient.shared.downloadResult(jobId: jobId)
-                        generatedImageData = data
-
-                        let gen = LocalGeneration(
-                            prompt: job.prompt,
-                            modelName: job.modelId,
-                            imageData: data
-                        )
-                        LocalStorage.saveGeneration(gen)
-                    }
+                if gen.status == "completed" {
+                    await downloadResult(jobId: jobId)
                     return
-                } else if job.status == "failed" {
-                    NSLog("[Generate] Job \(jobId) failed")
-                    HapticManager.notification(.error)
-                    generationError = job.statusDetail ?? "Generation failed"
+                } else if gen.status == "failed" {
+                    errorMessage = gen.statusDetail ?? "Generation failed"
                     return
                 }
+
+                try await Task.sleep(nanoseconds: 5_000_000_000)
             } catch {
-                NSLog("[Generate] Poll error: \(error)")
+                errorMessage = error.localizedDescription
+                return
             }
         }
-        generationError = "Job timed out after \(maxAttempts * 5) seconds"
+        errorMessage = "Generation timed out"
+    }
+
+    private func downloadResult(jobId: String) async {
+        do {
+            let data = try await APIClient.shared.downloadResult(jobId: jobId)
+            resultImageData = data
+            NSLog("[Generate] Result downloaded: \(data.count) bytes")
+        } catch {
+            errorMessage = "Failed to download result: \(error.localizedDescription)"
+            NSLog("[Generate] Download failed: \(error)")
+        }
     }
 }
 

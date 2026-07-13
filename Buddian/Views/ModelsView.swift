@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ModelsView: View {
-    @EnvironmentObject var modelCache: ModelCache
+    @ObservedObject var modelCache = ModelCache.shared
     @State private var filter: ModalityFilter = .all
 
     enum ModalityFilter: String, CaseIterable {

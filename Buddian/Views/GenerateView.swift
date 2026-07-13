@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct GenerateView: View {
-    @EnvironmentObject var modelCache: ModelCache
+    @ObservedObject var modelCache = ModelCache.shared
     @State private var isImage = true
     @State private var selectedModelID: String?
     @State private var prompt = ""
@@ -36,11 +36,22 @@ struct GenerateView: View {
                 }
 
                 Section("Model") {
-                    ForEach(modelsForCurrentTask(allModels)) { model in
-                        Button { selectedModelID = model.id; resetResult() } label: {
-                            modelLabel(model)
+                    if modelCache.isLoading {
+                        HStack {
+                            ProgressView()
+                            Text("Loading models...")
+                                .foregroundStyle(.secondary)
                         }
-                        .buttonStyle(.plain)
+                    } else if modelCache.models.isEmpty {
+                        Text("No models available")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(modelsForCurrentTask(allModels)) { model in
+                            Button { selectedModelID = model.id; resetResult() } label: {
+                                modelLabel(model)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
 
@@ -96,6 +107,10 @@ struct GenerateView: View {
                 }
             }
             .navigationTitle("Generate")
+            .task {
+                await modelCache.refresh()
+                setupDefaults(modelCache.models)
+            }
             .onAppear {
                 setupDefaults(allModels)
             }

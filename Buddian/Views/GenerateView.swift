@@ -1,22 +1,22 @@
 import SwiftUI
 
 struct GenerateView: View {
-    @State private var models: [PollinationsModel] = PollinationsClient.workingModels
-    @State private var selectedModel: PollinationsModel? = PollinationsClient.workingModels.first
+    @EnvironmentObject var modelCache: ModelCache
+    @State private var selectedModelID: String?
     @State private var prompt = ""
     @State private var isGenerating = false
     @State private var generatedImageData: Data?
     @State private var generationError: String?
+    @State private var jobStatus: String?
+    @State private var submittedJobId: String?
 
     var body: some View {
+        let allModels = modelCache.models
         NavigationStack {
             Form {
                 Section("Model") {
-                    ForEach(models) { model in
-                        Button {
-                            selectedModel = model
-                            generatedImageData = nil
-                        } label: {
+                    ForEach(modelsForCurrentTask(allModels)) { model in
+                        Button { selectedModelID = model.id; generatedImageData = nil } label: {
                             modelLabel(model)
                         }
                         .buttonStyle(.plain)
@@ -32,6 +32,14 @@ struct GenerateView: View {
                 }
 
                 Section {
+                    HStack {
+                        Text("Estimated Cost")
+                        Spacer()
+                        Text(priceForSelection(allModels)).fontWeight(.medium)
+                    }
+                }
+
+                Section {
                     PrimaryButton(title: "Generate", action: submitGeneration, isDisabled: !isReady())
                 }
 
@@ -42,6 +50,25 @@ struct GenerateView: View {
                             Text("Generating...")
                                 .foregroundStyle(.secondary)
                         }
+                    }
+                }
+
+                if let jobId = submittedJobId, let status = jobStatus {
+                    Section("Job Status") {
+                        HStack {
+                            Circle()
+                                .fill(status == "completed" ? .green : status == "failed" ? .red : .orange)
+                                .frame(width: 10, height: 10)
+                            Text(status.capitalized)
+                            Spacer()
+                            if status == "processing" || status == "queued" {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
+                        }
+                        Text("Job: \(jobId)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -67,23 +94,26 @@ struct GenerateView: View {
                 }
             }
             .navigationTitle("Generate")
-            .task {
-                await refreshModels()
+            .onAppear {
+                setupDefaults(allModels)
             }
         }
     }
 
-    private func modelLabel(_ model: PollinationsModel) -> some View {
+    private func modelsForCurrentTask(_ all: [RemoteModel]) -> [RemoteModel] {
+        all.filter { $0.outputModalities.contains("image") || $0.outputModalities.contains("video") }
+    }
+
+    private func modelLabel(_ model: RemoteModel) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.title)
-                    .foregroundStyle(.primary)
-                Text("Free")
-                    .font(.caption)
-                    .foregroundStyle(.green)
+                Text(model.name).foregroundStyle(.primary)
+                if let price = model.userPricing?.displayPrice {
+                    Text(price).font(.caption).foregroundStyle(.secondary)
+                }
             }
             Spacer()
-            if selectedModel?.id == model.id {
+            if selectedModelID == model.id {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(Color.accentColor)
             }
@@ -91,26 +121,38 @@ struct GenerateView: View {
         .contentShape(Rectangle())
     }
 
-    private func isReady() -> Bool {
-        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModel != nil && !isGenerating
+    private func priceForSelection(_ all: [RemoteModel]) -> String {
+        guard let m = all.first(where: { $0.id == selectedModelID }),
+              let p = m.userPricing else { return "N/A" }
+        if let img = p.perImage { return "$\(img)/image" }
+        if let sec = p.perSecond { return "$\(sec)/s" }
+        return "Free"
     }
 
-    private func refreshModels() async {
-        do {
-            let fetched = try await PollinationsClient.shared.fetchModels()
-            if !fetched.isEmpty {
-                models = fetched
-                if selectedModel == nil {
-                    selectedModel = fetched.first
-                }
-            }
-        } catch {
-            NSLog("[Generate] Using cached models: \(error)")
+    private func isReady() -> Bool {
+        !prompt.trimmingCharacters(in: .whitespaces).isEmpty && selectedModelID != nil && !isGenerating
+    }
+
+    private func setupDefaults(_ all: [RemoteModel]) {
+        let generationModels = modelsForCurrentTask(all)
+        if selectedModelID == nil {
+            selectedModelID = generationModels.first?.id
         }
     }
 
     private func submitGeneration() {
-        guard let model = selectedModel else { return }
+        guard let modelID = selectedModelID else { return }
+        let model = modelCache.models.first(where: { $0.id == modelID })
+
+        if modelID.hasPrefix("pollinations/") {
+            generateViaPollinations(modelID: modelID, model: model)
+        } else {
+            generateViaQueue(modelID: modelID, model: model)
+        }
+    }
+
+    private func generateViaPollinations(modelID: String, model: RemoteModel?) {
+        let pollinationsModel = modelID.replacingOccurrences(of: "pollinations/", with: "")
         isGenerating = true
         generationError = nil
         generatedImageData = nil
@@ -119,31 +161,101 @@ struct GenerateView: View {
             do {
                 let data = try await PollinationsClient.shared.generateImage(
                     prompt: prompt,
-                    model: model.name,
-                    width: 1024,
-                    height: 1024
+                    model: pollinationsModel,
+                    width: model?.defaultWidth ?? 1024,
+                    height: model?.defaultHeight ?? 1024
                 )
                 generatedImageData = data
                 HapticManager.notification(.success)
 
                 let gen = LocalGeneration(
                     prompt: prompt,
-                    modelName: model.title,
+                    modelName: model?.name ?? modelID,
                     imageData: data
                 )
                 LocalStorage.saveGeneration(gen)
 
-                NSLog("[Generate] Image received: \(data.count) bytes")
+                NSLog("[Generate] Pollinations image received: \(data.count) bytes")
             } catch {
                 generationError = error.localizedDescription
                 HapticManager.notification(.error)
-                NSLog("[Generate] Failed: \(error)")
+                NSLog("[Generate] Pollinations failed: \(error)")
             }
             isGenerating = false
         }
     }
+
+    private func generateViaQueue(modelID: String, model: RemoteModel?) {
+        isGenerating = true
+        generationError = nil
+        Task {
+            do {
+                let request = APIClient.GenerationSubmitRequest(
+                    modelId: modelID,
+                    prompt: prompt,
+                    negativePrompt: nil,
+                    width: model?.defaultWidth,
+                    height: model?.defaultHeight,
+                    steps: model?.defaultSteps,
+                    cfgScale: model?.defaultCfgScale,
+                    numImages: 1
+                )
+                let response = try await APIClient.shared.submitGeneration(request)
+                NSLog("[Generate] Job submitted: \(response.jobId), status: \(response.status)")
+                submittedJobId = response.jobId
+                jobStatus = response.status
+                prompt = ""
+                isGenerating = false
+                await pollJobStatus(jobId: response.jobId)
+            } catch {
+                generationError = error.localizedDescription
+                NSLog("[Generate] Submit failed: \(error)")
+                isGenerating = false
+            }
+        }
+    }
+
+    private func pollJobStatus(jobId: String) async {
+        var attempts = 0
+        let maxAttempts = 120
+
+        while attempts < maxAttempts {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            attempts += 1
+
+            do {
+                let job = try await APIClient.shared.fetchGeneration(jobId: jobId)
+                jobStatus = job.status
+
+                if job.status == "completed" {
+                    NSLog("[Generate] Job \(jobId) completed")
+                    HapticManager.notification(.success)
+                    if let url = job.resultDownloadURL {
+                        let data = try await APIClient.shared.downloadResult(jobId: jobId)
+                        generatedImageData = data
+
+                        let gen = LocalGeneration(
+                            prompt: job.prompt,
+                            modelName: job.modelId,
+                            imageData: data
+                        )
+                        LocalStorage.saveGeneration(gen)
+                    }
+                    return
+                } else if job.status == "failed" {
+                    NSLog("[Generate] Job \(jobId) failed")
+                    HapticManager.notification(.error)
+                    generationError = job.statusDetail ?? "Generation failed"
+                    return
+                }
+            } catch {
+                NSLog("[Generate] Poll error: \(error)")
+            }
+        }
+        generationError = "Job timed out after \(maxAttempts * 5) seconds"
+    }
 }
 
 #Preview {
-    GenerateView()
+    GenerateView().environmentObject(ModelCache.shared)
 }

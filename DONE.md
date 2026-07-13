@@ -169,3 +169,13 @@ Completed steps. See [TODO.md](TODO.md) for the plan and [README.md](README.md) 
 - Removed authentication flow (not needed for Pollinations)
 - Verified: build succeeds on iPhone 17 simulator
 - Files: `Buddian/Networking/PollinationsClient.swift`, `Buddian/Views/{GenerateView,ModelsView,LibraryView,WalletView}.swift`
+
+## Step 20: Fix EnvironmentObject & Fallback Models ✅
+
+- Fixed fatal error: ModelCache not injected into view hierarchy
+- Changed `@EnvironmentObject` to `@ObservedObject` with shared instance
+- Added fallback models (Flux, GPT Image, Seedream) when API unreachable
+- Added loading state indicator while models fetch
+- Added error message display
+- Verified: app runs in simulator, models load from fallback
+- Files: `Buddian/BuddianApp.swift`, `Buddian/Networking/ModelCache.swift`, `Buddian/Views/GenerateView.swift`, `Buddian/Views/ModelsView.swift`

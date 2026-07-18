@@ -4,162 +4,78 @@
 
 **Repo:** `Human-Rated-AI/buddian-ios` (pull latest `main`)
 **Build:** `xcodebuild -project Buddian.xcodeproj -scheme Buddian -destination 'platform=iOS Simulator,name=iPhone 16' build`
-**API:** `https://api.buddian.com` (live, deployed 2026-07-11)
-**API docs:** `IOS_API.md` (complete iOS-specific API reference)
-**What works now:** Model catalog (78 models, 3 free Pollinations), submit generation via server queue, list generations, job polling, result download, async image thumbnails in Library.
+**Backend repo:** `Human-Rated-AI/buddian` (see `API.md` for all endpoints)
+**Product spec:** `iOSApp.md` in backend repo
 
-### Architecture — server-only
+### Product Pivot (2026-07-18)
 
-All iOS requests go through Buddian API. The iOS app NEVER calls Pollinations directly. The server proxies to Pollinations with its own `sk_` API key. Users pay us via Apple IAP, we pay Pollinations.
+Buddian is now an **AI video streaming and creation platform** with dual-wallet monetization:
+- Users pay subscriptions ($14.99/mo, $59.99/6mo, $99.99/yr) for AI video generation seconds
+- Users earn fiat money when other paid users watch their videos
+- No free tier — everyone pays
+
+### Architecture
 
 ```
-iOS App → Buddian API (auth + generation + billing)
+iOS App → Buddian API (auth + generation + billing + streaming)
                 ↓
-Buddian API → Pollinations.ai (server-side)
+Buddian API → GPU Provider (video generation)
 ```
 
-### Auth flow
+### iOS API Endpoints (see API.md in backend repo)
 
-Apple Sign In → Firebase ID token → `POST /web/auth/firebase { id_token, platform: "ios" }` → session token stored in Keychain → `Bearer {token}` on all requests. Google Sign In deferred (repo inaccessible).
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `POST /web/auth/firebase` | POST | Firebase token → session |
+| `GET /users/me` | GET | Profile + dual wallet (generation seconds + fiat earned) |
+| `POST /generate/request` | POST | Submit video generation |
+| `GET /generate/status/{job_id}` | GET | Poll generation status |
+| `GET /feed` | GET | Video feed for watching |
+| `POST /player/track-view` | POST | Track watch time (anti-fraud) |
+| `GET /videos/me` | GET | List user's generated videos |
+| `PUT /videos/{id}` | PUT | Update video metadata |
+| `DELETE /videos/{id}` | DELETE | Soft-delete video |
+| `GET /videos/{id}/stats` | GET | Video analytics (views, earnings) |
+| `POST /billing/subscribe` | POST | Subscribe via StoreKit |
+| `POST /billing/top-up` | POST | Buy extra generation seconds (min $5) |
 
-### Priority next steps
+### iOS App Tabs
 
-1. **Firebase Auth verification** — Apple Sign In is coded but needs testing on device. Google Sign In blocked.
-2. **Models tab** — filter by image/video, tap to pre-select in Generate tab. Data already in `ModelCache.models`.
-3. **Job polling** — for GPU models, poll `GET /generations/{job_id}` every 5s, show status, display result when completed.
-4. **Job detail view** — tap job in Library → full-screen image preview + download button.
-5. **Wallet tab** — balance display, StoreKit integration, purchase flow.
+1. **Home (Feed)** — Vertical swipeable video feed (Reels/TikTok style)
+2. **Create** — AI video generation prompt input, aspect ratio selector
+3. **Studio (My Videos)** — Video list, swipe-left to delete, tap to edit/view stats
+4. **Profile** — Dual wallet display (Fiat Earned + Generation Seconds + Subscription status)
 
-### Key files
+### Priority Tasks for iOS Agent
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `Buddian/Views/GenerateView.swift` | ~190 | Generate tab: submit, poll, result display |
-| `Buddian/Views/LibraryView.swift` | ~128 | History list with AsyncImage thumbnails |
-| `Buddian/Networking/APIClient.swift` | ~152 | All Buddian API calls (never Pollinations directly) |
-| `Buddian/Networking/ModelsResponse.swift` | 77 | RemoteModel with pricing/params |
-| `Buddian/Models/Generation.swift` | 98 | Generation model with status/result |
-| `IOS_API.md` | ~170 | Complete iOS API reference |
+1. **Restructure tabs** — Change from Generate/Models/Library/Wallet to Home/Create/Studio/Profile
+2. **Video Feed** — Vertical swipeable feed with view tracking (ping API every X seconds while playing)
+3. **Dual Wallet UI** — Profile tab shows fiat earned ($) and generation seconds (s) separately
+4. **StoreKit Integration** — Subscription sheets for 3 tiers + top-up IAP (min $5)
+5. **Push Notifications** — Register for remote notifications, send "Your video is ready!"
+6. **Video Player** — HTML5 player with lifecycle hooks for accurate view tracking
+7. **Content Manager** — Studio tab: list, edit metadata, delete, view stats per video
+8. **Generation Flow** — Create tab: text input, aspect ratio, generate, progress bar, push notification on completion
 
-### Gotchas
+### Key Files to Review
 
-- All generation goes through `POST /generations` → server queue → worker → Pollinations. No direct API calls to Pollinations from iOS.
-- `project.pbxproj` has been cleaned up — no stale file references.
-- All UI text to stderr, machine output to stdout (project rule).
+| File | Purpose | Status |
+|------|---------|--------|
+| `Buddian/Views/GenerateView.swift` | Old generate tab | Needs rewrite → Create tab |
+| `Buddian/Views/LibraryView.swift` | Old library | Needs rewrite → Studio tab |
+| `Buddian/Views/ContentView.swift` | Tab navigation | Needs new tabs: Home, Create, Studio, Profile |
+| `Buddian/Networking/APIClient.swift` | API calls | Needs new endpoints (feed, track-view, videos, billing) |
+| `Buddian/Models/Generation.swift` | Generation model | Needs update for video (not image) |
 
----
+### What NOT to Build
 
-## What's Built
+- Do NOT call Pollinations or any external AI API directly from iOS
+- All requests go through Buddian API server
+- The server handles GPU provisioning and IP protection
 
-- ✅ SwiftUI scaffold with 4 tabs (Generate, Models, Library, Wallet)
-- ✅ API client: health check, fetch models, fetch account
-- ✅ Model catalog: 75 models, filter by type, pricing display
-- ✅ Model caching: loads on startup
-- ✅ Account/balance display
-- ✅ Reusable components: CardView, PrimaryButton, SectionHeader, EmptyStateView
-- ✅ Theme system with dark mode
-- ✅ Backend endpoints ready: auth, models, generations, balance
+### Verification
 
-## MVP Tasks (v1)
-
-### 1. Firebase Authentication
-
-- [x] Add Firebase iOS SDK via Swift Package Manager
-- [x] Add `GoogleService-Info.plist` (Firebase config, safe for public repo)
-- [x] Implement Sign in with Apple (`AuthenticationServices`)
-- [ ] Implement Google Sign In (`GoogleSignIn` framework) — deferred, repo inaccessible
-- [x] Exchange Firebase ID token for Buddian session via `POST /web/auth/firebase`
-- [x] Store session token in Keychain
-- [x] Handle auth state: logged in → show app, logged out → show login screen
-- [x] Auto-login on app launch if session token exists
-
-### 2. Generate Tab
-
-- [x] Model picker: list generation models (image/video), show pricing, select one
-- [x] Prompt input: text field with character count
-- [ ] Optional parameters: negative prompt, width, height, steps, cfg scale
-- [x] Cost preview: show estimated cost before submission
-- [x] Submit button → `POST /generations` → show "Job submitted" with job_id (for non-Pollinations models)
-- [x] Direct Pollinations generation: Pollinations models generate instantly via direct API call
-- [ ] Job status view: poll `GET /generations/{job_id}` every 5 seconds
-- [x] Result view: show completed image (Pollinations: inline, queue: via result download)
-- [ ] Error handling: insufficient balance, model not available, timeout
-
-### 3. Models Tab
-
-- [ ] List all generation models from `GET /models?output_modality=image` and `?output_modality=video`
-- [ ] Filter chips: All / Image / Video
-- [ ] Each model card: name, type badge, pricing, default parameters
-- [ ] Tap model → navigate to Generate tab with model pre-selected
-
-### 4. Library Tab
-
-- [x] List past generation jobs from `GET /generations`
-- [x] Each job card: model name, status badge, cost, date, thumbnail (AsyncImage)
-- [ ] Tap job → detail view with result preview and download
-- [x] Pull-to-refresh
-- [x] Empty state: "No generations yet. Start creating!"
-
-### 5. Wallet Tab
-
-- [ ] Balance display from `GET /web/me` → `user.balance.available_usd`
-- [ ] Transaction history from `GET /web/me` → `transactions[]`
-- [ ] "Add Funds" button → StoreKit product list
-- [ ] StoreKit products: Starter ($4.99), Pro ($9.99), Studio ($24.99)
-- [ ] Purchase flow: buy → verify receipt → backend credits balance
-- [ ] Balance refresh after purchase
-
-### 6. Backend: StoreKit Verification
-
-- [ ] Add `POST /storekit/verify` endpoint to backend
-- [ ] Accept Apple receipt data, verify with Apple servers, credit user balance
-- [ ] This is in the `buddian` repo, not this one — coordinate with backend session
-
-### 7. Push Notifications
-
-- [ ] Register for remote notifications
-- [ ] Send device token to backend
-- [ ] Backend sends notification when generation job completes
-- [ ] Tap notification → open app → navigate to Library → show result
-
-### 8. Polish
-
-- [ ] Loading states for all async operations
-- [ ] Error alerts with retry
-- [ ] Pull-to-refresh on Library and Models
-- [ ] Haptic feedback on actions
-- [ ] App icon and launch screen
-- [ ] Localization (English first, then Spanish/Russian)
-
-## v2+ Tasks
-
-### 9. Confidential Inference (Phala TEE)
-
-- [ ] Add Shield tab
-- [ ] Port E2EE crypto from `buddian-web` to Swift (secp256k1, HKDF, AES-GCM)
-- [ ] Tier selector: Confidential / Standard
-- [ ] Encrypted request flow: attestation → encrypt → send → decrypt → display
-- [ ] Proof bundle download and verification
-
-### 10. Batch Generation
-
-- [ ] Batch prompt upload (multiple prompts)
-- [ ] GPU time purchase via StoreKit (1hr/3hr/6hr/24hr packages)
-- [ ] Progress view: X/Y completed
-- [ ] Batch result download (ZIP)
-
-### 11. Advanced Features
-
-- [ ] Custom model deployment
-- [ ] Model catalog from Hugging Face
-- [ ] Batch job splitting across GPU sessions
-- [ ] Encrypted media storage
-
-## Verification
-
-After each milestone:
 - Build succeeds on `macos-latest` via GitHub Actions
-- No secrets or credentials in git history
 - All API calls work against production `api.buddian.com`
-- UI renders correctly on iPhone SE (smallest) and iPhone 16 Pro Max (largest)
+- UI renders correctly on iPhone SE through iPhone 16 Pro Max
 - Dark mode and light mode both look correct
